@@ -22,12 +22,12 @@ import os.path as op  # system functions
 # Defintiions #
 ###############
 
-path = '/home/arkiev/data/ds000114/'
-output_path = '/home/arkiev/git/python-tutorials/T1pipeline/'
-subject_list = [1, 2]
-session_list = ['retest', 'test']
-# subject_list = [1]
-# session_list = ['retest']
+path = '/Users/arkievdsouza/Library/CloudStorage/OneDrive-TheUniversityofSydney(Staff)/NIF/NIFdata/ds000114/sub-08'
+output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir'
+# subject_list = [1, 2]
+# session_list = ['retest', 'test']
+subject_list = [1]
+session_list = ['retest']
 
 
 # source subjects and sessions
