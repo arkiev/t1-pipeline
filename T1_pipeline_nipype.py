@@ -22,8 +22,9 @@ import os.path as op  # system functions
 # Defintiions #
 ###############
 
-path = '/Users/arkievdsouza/Documents/NIFdata'
+path = '/Users/arkievdsouza/Documents/NIFdata/ds000114'
 output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir'
+
 # subject_list = [1, 2]
 # session_list = ['retest', 'test']
 subject_list = [1]
@@ -67,7 +68,7 @@ RA_node = Node(ReconAll(), name='ReconAll')
 RA_node.inputs.subject_id = 'ReconAllOutputs'
 RA_node.inputs.directive = 'all'
 RA_node.inputs.subjects_dir = '.'
-RA_node.inputs.openmp = 8
+RA_node.inputs.openmp = 16
 RA_node.inputs.parallel = True
 
 ###############################################
