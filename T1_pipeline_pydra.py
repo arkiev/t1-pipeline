@@ -29,11 +29,9 @@ wf.add(
         threads=24,
         parallel=True,
         name="FastSurfer_task",
-        seg_only=True,
         py="python3.11"
         # no_cuda=True
     )    
-
 )
 
 # #################################################
@@ -98,15 +96,21 @@ wf.set_output(("fTT_image", wf.fTTgen_task.lzout.output.cast(ImageFormat)))
 wf.set_output(("vis_image", wf.fTTvis_task.lzout.output.cast(ImageFormat)))
 # wf.set_output(("parc_image", wf.SGMfix_task.lzout.output.cast(ImageFormat)))
 
+# ## Execute the workflow (FastSurfer, NIF data)
+# result = wf(
+#     t1w="/Users/arkievdsouza/Documents/NIFdata/ds000114/sub-01/ses-retest/anat/sub-01_ses-retest_T1w.nii.gz",
+#     fs_license="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FS_license.txt",
+#     sub_ID="sub-01_ses-retest",
+#     plugin="serial"
+# )
 
-## Execute the workflow (FastSurfer, NIF data)
+# Execute the workflow (FastSurfer, HCP data)
 result = wf(
-    t1w="/Users/arkievdsouza/Documents/NIFdata/ds000114/sub-01/ses-retest/anat/sub-01_ses-retest_T1w.nii.gz",
+    t1w="/Users/arkievdsouza/Documents/100307/100307_FastSurfer/mri/orig.nii.gz",
     fs_license="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FS_license.txt",
-    sub_ID="sub-01_ses-retest",
-    plugin="serial"
+    sub_ID="100307",
+    plugin="serial",
 )
-
 
 # # Execute the workflow - NIF data
 # result = wf(
