@@ -13,7 +13,7 @@ from pydra.tasks.fastsurfer.latest import fastsurfer
 output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir'
 
 # Define the input_spec for the workflow
-input_spec = {"t1w": NiftiGz, "fs_license": File, "sub_ID": str, "default_file": File, "freesurfer_LUT": File}
+input_spec = {"t1w": NiftiGz, "fs_license": File, "sub_ID": str, "default_file": File, "freesurfer_LUT": File, "segmentation": MghZip}
 output_spec = {"fTT_image": ImageFormat,"vis_image": ImageFormat,  "parc_image": ImageFormat}
 
 # Create a workflow 
@@ -31,6 +31,8 @@ wf.add(
         py="python3.11",
         norm_img="norm.nii.gz",
         aparcaseg="aparcaseg.nii.gz",
+        surf_only=True,
+        seg=wf.lzin.segmentation,
         
     )    
 
@@ -113,6 +115,7 @@ result = wf(
     sub_ID="100307",
     default_file="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/fs_default.txt",
     freesurfer_LUT="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FreeSurferColorLUT.txt",
+    segmentation="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_0425d50a2d1bdc642ef8feb235ec3855/subjects_dir/100307/mri/aparc.DKTatlas+aseg.deep.mgz",
     plugin="serial",
 )
 
