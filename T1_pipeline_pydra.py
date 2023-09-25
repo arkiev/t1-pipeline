@@ -4,7 +4,7 @@ import pydra
 from pydra import Workflow
 from pydra.engine.specs import File, Directory
 from pydra.tasks.mrtrix3.v3_0 import fivett2vis, fivettgen_hsvs, labelconvert, labelsgmfix
-from fileformats.medimage import NiftiGz, MghZip
+from fileformats.medimage import NiftiGz, MghGz
 from fileformats.medimage_mrtrix3 import ImageFormat
 from pydra.tasks.fastsurfer.latest import fastsurfer
 
@@ -13,7 +13,7 @@ from pydra.tasks.fastsurfer.latest import fastsurfer
 output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir'
 
 # Define the input_spec for the workflow
-input_spec = {"t1w": NiftiGz, "fs_license": File, "sub_ID": str, "default_file": File, "freesurfer_LUT": File, "segmentation": NiftiGz}
+input_spec = {"t1w": NiftiGz, "fs_license": File, "sub_ID": str, "default_file": File, "freesurfer_LUT": File, "segmentation": MghGz}
 output_spec = {"fTT_image": ImageFormat,"vis_image": ImageFormat,  "parc_image": ImageFormat}
 
 # Create a workflow 
@@ -31,11 +31,9 @@ wf.add(
         py="python3.11",
         norm_img="norm.mgz",
         aparcaseg="aparcaseg.mgz",
-        surf_only=True,
-        seg=wf.lzin.segmentation,
-        
+        # surf_only=True,
+        # seg=wf.lzin.segmentation,
     )    
-
 )
 
 # #################################################
@@ -115,7 +113,7 @@ result = wf(
     sub_ID="100307",
     default_file="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/fs_default.txt",
     freesurfer_LUT="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FreeSurferColorLUT.txt",
-    segmentation="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_0425d50a2d1bdc642ef8feb235ec3855/subjects_dir/100307/mri/aparc.DKTatlas+aseg.deep.nii.gz",
+    segmentation="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_0425d50a2d1bdc642ef8feb235ec3855/subjects_dir/100307/mri/aparc.DKTatlas+aseg.deep.mgz",
     plugin="serial",
 )
 
