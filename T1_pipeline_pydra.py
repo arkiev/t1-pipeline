@@ -3,7 +3,7 @@ import typing as ty
 import pydra  
 from pydra import Workflow
 from pydra.engine.specs import File, Directory
-from pydra.tasks.mrtrix3.v3_0 import fivett2vis, fivettgen_hsvs, labelconvert, labelsgmfix
+from pydra.tasks.mrtrix3.v3_0 import fivett2vis, fivettgen_hsvs, labelconvert, labelsgmfix, mrconvert
 from fileformats.medimage import NiftiGz, MghGz
 from fileformats.medimage_mrtrix3 import ImageFormat
 from pydra.tasks.fastsurfer.latest import fastsurfer
@@ -25,16 +25,24 @@ wf.add(
         T1_files=wf.lzin.t1w, 
         fs_license=wf.lzin.fs_license,
         subject_id="FS_outputs",
-        threads=32,
+        threads=7,
         parallel=True,
         name="FastSurfer_task",
         py="python3.11",
         norm_img="norm.mgz",
         aparcaseg="aparcaseg.mgz",
         # surf_only=True,
-        # seg=wf.lzin.segmentation,
+        # seg=wf.lzins.segmentation,
     )    
 )
+
+# wf.add(
+#     mrconvert(
+#         input=wf.FastSurfer_task.lzout.aparcaseg_img
+#         output="aparc+aseg.mgz"
+#         name="mrconvert_task_aparcaseg"
+#     )
+# )
 
 # #################################################
 # # Five Tissue Type Generation and visualisation #
@@ -43,7 +51,7 @@ wf.add(
 # Five tissue-type task
 wf.add(
     fivettgen_hsvs(
-        input=wf.FastSurfer_task.lzout.subjects_dir, 
+        input=wf.FastSurfer_task.lzout.subject_dir_output, 
         output="fTT_hsvs.mif",
         name="fTTgen_task",
         nocrop=True,
