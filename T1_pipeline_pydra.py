@@ -13,7 +13,7 @@ from pydra.tasks.fastsurfer.latest import fastsurfer
 output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir'
 
 # Define the input_spec for the workflow
-input_spec = {"t1w": NiftiGz, "fs_license": File, "sub_ID": str, "default_file": File, "freesurfer_LUT": File, "segmentation": MghGz}
+input_spec = {"t1w": NiftiGz, "fs_license": File, "sub_ID": str, "default_file": File, "freesurfer_LUT": File, "segmentation": MghGz} 
 output_spec = {"fTT_image": ImageFormat,"vis_image": ImageFormat,  "parc_image": ImageFormat}
 
 # Create a workflow 
@@ -25,7 +25,7 @@ wf.add(
         T1_files=wf.lzin.t1w, 
         fs_license=wf.lzin.fs_license,
         subject_id="FS_outputs",
-        threads=7,
+        threads=24,
         parallel=True,
         name="FastSurfer_task",
         py="python3.11",
@@ -51,7 +51,7 @@ wf.add(
 # Five tissue-type task
 wf.add(
     fivettgen_hsvs(
-        input=wf.FastSurfer_task.lzout.subject_dir_output, 
+        input=wf.FastSurfer_task.lzout.subjects_dir_output, 
         output="fTT_hsvs.mif",
         name="fTTgen_task",
         nocrop=True,
