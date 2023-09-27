@@ -36,13 +36,13 @@ wf.add(
     )    
 )
 
-# wf.add(
-#     mrconvert(
-#         input=wf.FastSurfer_task.lzout.aparcaseg_img
-#         output="aparc+aseg.mgz"
-#         name="mrconvert_task_aparcaseg"
-#     )
-# )
+wf.add(
+    mrconvert(
+        input=wf.FastSurfer_task.lzout.aparcasegorig_img,
+        output=wf.FastSurfer_task.lzout.aparcaseg_img,
+        name="mrconvert_task_aparcaseg"
+    )
+)
 
 # #################################################
 # # Five Tissue Type Generation and visualisation #
