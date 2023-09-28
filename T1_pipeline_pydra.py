@@ -31,8 +31,8 @@ wf.add(
         py="python3.11",
         norm_img="norm.mgz",
         aparcaseg="aparcaseg.mgz",
-        # surf_only=True,
-        # seg=wf.lzins.segmentation,
+        surf_only=True,
+        seg=wf.lzin.segmentation,
     )    
 )
 
