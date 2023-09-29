@@ -1,12 +1,18 @@
 import os
 import typing as ty
 import pydra  
-from pydra import Workflow
+from pydra import Workflow, mark  
 from pydra.engine.specs import File, Directory
 from pydra.tasks.mrtrix3.v3_0 import fivett2vis, fivettgen_hsvs, labelconvert, labelsgmfix, mrconvert
 from fileformats.medimage import NiftiGz, MghGz
 from fileformats.medimage_mrtrix3 import ImageFormat
 from pydra.tasks.fastsurfer.latest import fastsurfer
+import shutil
+from pathlib import Path
+import shutil
+from fileformats.generic import Directory
+from fileformats.medimage import MghGz
+from pydra import mark
 
 # Define the path and output_path variables
 # path = '/Users/arkievdsouza/Documents/NIFdata/ds000114'
@@ -31,18 +37,38 @@ wf.add(
         py="python3.11",
         norm_img="norm.mgz",
         aparcaseg="aparcaseg.mgz",
-        surf_only=True,
-        seg=wf.lzin.segmentation,
+        # surf_only=True,
+        # seg=wf.lzin.segmentation,
     )    
 )
 
 wf.add(
     mrconvert(
         input=wf.FastSurfer_task.lzout.aparcasegorig_img,
-        output=wf.FastSurfer_task.lzout.aparcaseg_img,
+        output="aparc+aseg.mgz",
         name="mrconvert_task_aparcaseg"
     )
 )
+
+# create a temp subject dir
+# tmp_directory = Path(output_path) / "FS_outputs_tmp"
+# tmp_directory.mkdir(parents=True, exist_ok=True)
+
+# copy link to FS and aparc+aseg into it
+
+@mark.task
+def collate(fs_dir: Directory, converted_file: MghGz) -> Directory:
+    out_dir = fs_dir.copy("out-dir", mode=Directory.CopyMode.hardlink)
+    shutil.copy(converted_file, out_dir.fspath / "converted.mgz")
+    return out_dir
+
+# Create an instance of the collate task
+fsd="/Users/arkievdsouza/git/t1-pipeline/working-dir/Archive8/fastsurfer_e8d98009cba61370bfe7b24adca6a21b/subjects_dir/FS_outputs"
+collate_task = collate(fs_dir=fsd, converted_file=wf.mrconvert_task_aparcaseg.lzout.output)
+
+# Run the collate task
+output_directory = collate_task()
+
 
 # #################################################
 # # Five Tissue Type Generation and visualisation #
@@ -121,7 +147,7 @@ result = wf(
     sub_ID="100307",
     default_file="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/fs_default.txt",
     freesurfer_LUT="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FreeSurferColorLUT.txt",
-    segmentation="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_0425d50a2d1bdc642ef8feb235ec3855/subjects_dir/100307/mri/aparc.DKTatlas+aseg.deep.mgz",
+    # segmentation="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_0425d50a2d1bdc642ef8feb235ec3855/subjects_dir/100307/mri/aparc.DKTatlas+aseg.deep.mgz",
     plugin="serial",
 )
 
