@@ -125,3 +125,6 @@ result = wf(
 )
 
 
+## RUN THIS script, check it works
+# create a copy, call copy _parc_append or something
+# add in catalogue of parcellation files
