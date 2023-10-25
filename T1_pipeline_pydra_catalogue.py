@@ -17,7 +17,8 @@ from pydra import mark
 # Define the path and output_path variables
 # path = '/Users/arkievdsouza/Documents/NIFdata/ds000114'
 output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir'
-
+mrtrix_lut_dir = '/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert'
+freesurfer_home = '/Applications/freesurfer'
 # Define the input_spec for the workflow
 input_spec = {"t1w": NiftiGz, "fs_license": File, "sub_ID": str, "shared_parcellation": str, "FS_dir": str} 
 output_spec = {"fTT_image": ImageFormat,"vis_image": ImageFormat,  "parc_image": ImageFormat}
@@ -69,45 +70,64 @@ wf.add(
 # ###############################
 # # Generate parcellation image #
 # ###############################
+# parcellation="desikan"
 
-if parcellation == 'brainnetome246fs':
-                self.parc_lut_file = os.path.join(self.freesurfer_home,
-                                                  'BN_Atlas_246_LUT.txt')
-                self.mrtrix_lut_file = ''
-elif parcellation == 'desikan':
-    self.parc_lut_file = os.path.join(self.freesurfer_home,
-                                        'FreeSurferColorLUT.txt')
-    self.mrtrix_lut_file = os.path.join(mrtrix_lut_dir,
-                                        'fs_default.txt')
-elif parcellation == 'destrieux':
-    self.parc_lut_file = os.path.join(self.freesurfer_home,
-                                        'FreeSurferColorLUT.txt')
-    self.mrtrix_lut_file = os.path.join(mrtrix_lut_dir,
-                                        'fs_a2009s.txt')
-elif parcellation == 'hcpmmp1':
-    self.parc_lut_file = os.path.join(mrtrix_lut_dir,
-                                        'hcpmmp1_original.txt')
-    self.mrtrix_lut_file = os.path.join(mrtrix_lut_dir,
-                                        'hcpmmp1_ordered.txt')
-elif parcellation in ['yeo7fs', 'yeo17fs']:
-    self.parc_lut_file = \
-        os.path.join(self.freesurfer_home,
-                        'Yeo2011_'
-                        + ('7' if parcellation == 'yeo7fs' else '17')
-                        + 'networks_Split_Components_LUT.txt')
-    self.mrtrix_lut_file = \
-        os.path.join(mrtrix_lut_dir,
-                        'Yeo2011_'
-                        + ('7' if parcellation == 'yeo7fs' else '17')
-                        + 'N_split.txt')
-# Grab the relevant parcellation image and target lookup table for conversion
-        parc_image_path = os.path.join(wf.FastSurfer_task.lzout.subjects_dir_output,'freesurfer', 'mri')
-        if wf.lzin.shared_parcellation == 'desikan':
-            parc_image_path = os.path.join(parc_image_path,
-                                           'aparc+aseg.mgz')
-        elif shared.parcellation == 'destrieux':
-            parc_image_path = os.path.join(parc_image_path,
-                                           'aparc.a2009s+aseg.mgz')
+# if parcellation == 'brainnetome246fs':
+#     parc_lut_file = os.path.join(freesurfer_home,
+#                                         'BN_Atlas_246_LUT.txt')
+#     mrtrix_lut_file = ''
+# elif parcellation == 'desikan':
+#     parc_lut_file = os.path.join(freesurfer_home,
+#                                         'FreeSurferColorLUT.txt')
+#     mrtrix_lut_file = os.path.join(mrtrix_lut_dir,
+#                                         'fs_default.txt')
+# elif parcellation == 'destrieux':
+#     parc_lut_file = os.path.join(freesurfer_home,
+#                                         'FreeSurferColorLUT.txt')
+#     mrtrix_lut_file = os.path.join(mrtrix_lut_dir,
+#                                         'fs_a2009s.txt')
+# elif parcellation == 'hcpmmp1':
+#     parc_lut_file = os.path.join(mrtrix_lut_dir,
+#                                         'hcpmmp1_original.txt')
+#     mrtrix_lut_file = os.path.join(mrtrix_lut_dir,
+#                                         'hcpmmp1_ordered.txt')
+# elif parcellation in ['yeo7fs', 'yeo17fs']:
+#     parc_lut_file = \
+#         os.path.join(freesurfer_home,
+#                         'Yeo2011_'
+#                         + ('7' if parcellation == 'yeo7fs' else '17')
+#                         + 'networks_Split_Components_LUT.txt')
+#     mrtrix_lut_file = \
+#         os.path.join(mrtrix_lut_dir,
+#                         'Yeo2011_'
+#                         + ('7' if parcellation == 'yeo7fs' else '17')
+#                         + 'N_split.txt')
+
+# # Grab the relevant parcellation image and target lookup table for conversion
+
+# if wf.lzin.shared_parcellation == 'desikan':
+
+    # parc_image_path = os.path.join(parc_image_path,
+    #                                 'aparc+aseg.mgz')
+
+    # Define a Pydra task for concatenating strings, thereby label the appropriate parcellation file
+# Annotate the task
+@mark.task
+@mark.annotate(
+    {"a": str}
+)
+def join_paths(a):
+    p=os.path.join(a, 'mri')
+    return p
+
+# Add the task to the workflow
+wf.add(join_paths(a=wf.lzin.FS_dir, name="join_task")) #CHANGE a TO BE OUTPUT FROM FASTSURFER_TASK
+# Set the workflow output as the result of the join_task
+wf.set_output(("parc_path_str", wf.join_task.lzout.out))
+
+# elif shared.parcellation == 'destrieux':
+#     parc_image_path = os.path.join(parc_image_path,
+#                                            'aparc.a2009s+aseg.mgz')
 #         # else:
 #         #     # Non-standard parcellations are not applied as part of
 #         #     #   the recon-all command; need to explicitly map them to
@@ -252,232 +272,26 @@ elif parcellation in ['yeo7fs', 'yeo17fs']:
 #         #     else:
 #         #         assert False
 
-        if shared.mrtrix_lut_file:
-            # If necessary:
-            # Perform the index conversion
-            run.command('labelconvert ' + parc_image_path + ' '
-                        + shared.parc_lut_file + ' '
-                        + shared.mrtrix_lut_file
-                        + ' parc_init.mif')
-            # Fix the sub-cortical grey matter parcellations using FSL FIRST
-            run.command('labelsgmfix parc_init.mif '
-                        + freesurfer_T1w_input
-                        + ' '
-                        + shared.mrtrix_lut_file
-                        + ' parc.mif')
-            app.cleanup('parc_init.mif')
-        else:
-            # Non-standard sub-cortical parcellation;
-            #   labelsgmfix not applicable
-            run.command('mrconvert ' + parc_image_path + ' parc.mif '
-                        '-datatype uint32')
-        app.cleanup('freesurfer')
-
-
-#     # elif shared.do_mni:
-#     #     app.console('Registering to MNI template and transforming grey '
-#     #                 'matter parcellation back to subject space')
-
-#     #     # Use non-dilated brain masks for performing
-#     #     #   histogram matching & linear registration
-#     #     T1_histmatched_path = 'T1_histmatch.nii'
-#     #     run.command('mrhistmatch linear '
-#     #                 + T1_image
-#     #                 + ' '
-#     #                 + shared.template_image_path
-#     #                 + ' -mask_input T1_mask.mif'
-#     #                 + ' -mask_target ' + shared.template_mask_path
-#     #                 + ' - |'
-#     #                 + ' mrconvert - '
-#     #                 + T1_histmatched_path
-#     #                 + ' -strides '
-#     #                 + ('-1,+2,+3' \
-#     #                    if shared.template_registration_software == 'fsl' \
-#     #                    else '+1,+2,+3'))
-
-#     #     assert shared.template_registration_software
-#     #     if shared.template_registration_software == 'ants':
-
-#     #         # Use ANTs SyN for registration to template
-#     #         # From Klein and Avants, Frontiers in Neuroinformatics 2013:
-#     #         ants_prefix = 'template_to_t1_'
-#     #         run.command('antsRegistration'
-#     #                     + ' --dimensionality 3'
-#     #                     + ' --output '
-#     #                     + ants_prefix
-#     #                     + ' --use-histogram-matching 1'
-#     #                     + ' --initial-moving-transform ['
-#     #                     + T1_histmatched_path
-#     #                     + ','
-#     #                     + shared.template_image_path
-#     #                     + ',1]'
-#     #                     + ' --transform Rigid[0.1]'
-#     #                     + ' --metric MI['
-#     #                     + T1_histmatched_path
-#     #                     + ','
-#     #                     + shared.template_image_path
-#     #                     + ',1,32,Regular,0.25]'
-#     #                     + ' --convergence 1000x500x250x100'
-#     #                     + ' --smoothing-sigmas 3x2x1x0'
-#     #                     + ' --shrink-factors 8x4x2x1'
-#     #                     + ' --transform Affine[0.1]'
-#     #                     + ' --metric MI['
-#     #                     + T1_histmatched_path
-#     #                     + ','
-#     #                     + shared.template_image_path
-#     #                     + ',1,32,Regular,0.25]'
-#     #                     + ' --convergence 1000x500x250x100'
-#     #                     + ' --smoothing-sigmas 3x2x1x0'
-#     #                     + ' --shrink-factors 8x4x2x1'
-#     #                     + ' --transform BSplineSyN[0.1,26,0,3]'
-#     #                     + ' --metric CC['
-#     #                     + T1_histmatched_path
-#     #                     + ','
-#     #                     + shared.template_image_path
-#     #                     + ',1,4]'
-#     #                     + ' --convergence 100x70x50x20'
-#     #                     + ' --smoothing-sigmas 3x2x1x0'
-#     #                     + ' --shrink-factors 6x4x2x1')
-#     #         transformed_atlas_path = 'atlas_transformed.nii'
-#     #         run.command('antsApplyTransforms'
-#     #                     + ' --dimensionality 3'
-#     #                     + ' --input '
-#     #                     + shared.parc_image_path
-#     #                     + ' --reference-image '
-#     #                     + T1_histmatched_path
-#     #                     + ' --output '
-#     #                     + transformed_atlas_path
-#     #                     + ' --n GenericLabel'
-#     #                     + ' --transform '
-#     #                     + ants_prefix
-#     #                     + '1Warp.nii.gz'
-#     #                     + ' --transform '
-#     #                     + ants_prefix
-#     #                     + '0GenericAffine.mat'
-#     #                     + ' --default-value 0')
-#     #         app.cleanup(glob.glob(ants_prefix + '*'))
-
-#     #     elif shared.template_registration_software == 'fsl':
-
-#     #         # Subject T1, brain masked; for flirt -in
-#     #         if T1_is_premasked:
-#     #             flirt_in_path = T1_histmatched_path
-#     #         else:
-#     #             flirt_in_path = \
-#     #                 os.path.splitext(T1_histmatched_path)[0] \
-#     #                 + '_masked.nii'
-#     #             run.command('mrcalc '
-#     #                         + T1_histmatched_path
-#     #                         + ' T1_mask.mif -mult '
-#     #                         + flirt_in_path)
-#     #         # Template T1, brain masked; for flirt -ref
-#     #         flirt_ref_path = 'template_masked.nii'
-#     #         run.command('mrcalc '
-#     #                     + shared.template_image_path
-#     #                     + ' '
-#     #                     + shared.template_mask_path
-#     #                     + ' -mult - |'
-#     #                     + ' mrconvert - '
-#     #                     + flirt_ref_path
-#     #                     + ' -strides -1,+2,+3')
-#     #         # Now have data required to run flirt
-#     #         run.command(shared.flirt_cmd
-#     #                     + ' -ref ' + flirt_ref_path
-#     #                     + ' -in ' + flirt_in_path
-#     #                     + ' -omat T1_to_template.mat'
-#     #                     + ' -dof 12'
-#     #                     + ' -cost leastsq')
-#     #         if not T1_is_premasked:
-#     #             app.cleanup(flirt_in_path)
-#     #         app.cleanup(flirt_ref_path)
-
-#     #         # If possible, use dilated brain masks for non-linear
-#     #         #   registration to mitigate mask edge effects;
-#     #         #   if T1-weighted image is premasked, can't do this
-#     #         fnirt_in_path = T1_histmatched_path
-#     #         fnirt_ref_path = shared.template_image_path
-#     #         if T1_is_premasked:
-#     #             fnirt_in_mask_path = 'T1_mask.nii'
-#     #             run.command('mrconvert T1_mask.mif '
-#     #                         + fnirt_in_mask_path
-#     #                         + ' -strides -1,+2,+3')
-#     #             fnirt_ref_mask_path = shared.template_mask_path
-#     #         else:
-#     #             fnirt_in_mask_path = 'T1_mask_dilated.nii'
-#     #             run.command('maskfilter T1_mask.mif dilate -'
-#     #                         + ' -npass 3'
-#     #                         + ' |'
-#     #                         + ' mrconvert - '
-#     #                         + fnirt_in_mask_path
-#     #                         + ' -strides -1,+2,+3')
-#     #             fnirt_ref_mask_path = 'template_mask_dilated.nii'
-#     #             run.command('maskfilter '
-#     #                         + shared.template_mask_path
-#     #                         + ' dilate '
-#     #                         + fnirt_ref_mask_path
-#     #                         + ' -npass 3')
-
-#     #         run.command(shared.fnirt_cmd
-#     #                     + ' --config=' + shared.fnirt_config_basename
-#     #                     + ' --ref=' + fnirt_ref_path
-#     #                     + ' --in=' + fnirt_in_path
-#     #                     + ' --aff=T1_to_template.mat'
-#     #                     + ' --refmask=' + fnirt_ref_mask_path
-#     #                     + ' --inmask=' + fnirt_in_mask_path
-#     #                     + ' --cout=T1_to_template_warpcoef.nii')
-#     #         app.cleanup(fnirt_in_mask_path)
-#     #         if not T1_is_premasked:
-#     #             app.cleanup(fnirt_ref_mask_path)
-#     #         app.cleanup('T1_to_template.mat')
-#     #         fnirt_warp_subject2template_path = \
-#     #             fsl.find_image('T1_to_template_warpcoef')
-
-#     #         # Use result of registration to transform atlas
-#     #         #   parcellation to subject space
-#     #         run.command(shared.invwarp_cmd
-#     #                     + ' --ref=' + T1_histmatched_path
-#     #                     + ' --warp=' + fnirt_warp_subject2template_path
-#     #                     + ' --out=template_to_T1_warpcoef.nii')
-#     #         app.cleanup(fnirt_warp_subject2template_path)
-#     #         fnirt_warp_template2subject_path = \
-#     #             fsl.find_image('template_to_T1_warpcoef')
-#     #         run.command(shared.applywarp_cmd
-#     #                     + ' --ref=' + T1_histmatched_path
-#     #                     + ' --in=' + shared.parc_image_path
-#     #                     + ' --warp=' + fnirt_warp_template2subject_path
-#     #                     + ' --out=atlas_transformed.nii'
-#     #                     + ' --interp=nn')
-#     #         app.cleanup(fnirt_warp_template2subject_path)
-#     #         transformed_atlas_path = fsl.find_image('atlas_transformed')
-
-#     #     app.cleanup(T1_histmatched_path)
-
-#     #     if shared.parc_lut_file and shared.mrtrix_lut_file:
-#     #         run.command(['labelconvert',
-#     #                      transformed_atlas_path,
-#     #                      shared.parc_lut_file,
-#     #                      shared.mrtrix_lut_file,
-#     #                      'parc.mif'])
-#     #     else:
-#     #         # Not all parcellations need to go through the labelconvert step;
-#     #         #   they may already be numbered incrementally from 1
-#     #         run.command(['mrconvert',
-#     #                      transformed_atlas_path,
-#     #                      'parc.mif'])
-#     #     app.cleanup(transformed_atlas_path)
-
-
-#     if output_verbosity > 2 and shared.parcellation != 'none':
-#         if shared.mrtrix_lut_file:
-#             label2colour_lut_option = ' -lut ' + shared.mrtrix_lut_file
-#         elif shared.parc_lut_file:
-#             label2colour_lut_option = ' -lut ' + shared.parc_lut_file
-#         else:
-#             # Use random colouring if no LUT available, but
-#             #   still generate the image
-#             label2colour_lut_option = ''
-#         run.command('label2colour parc.mif parcRGB.mif'
-#                     + label2colour_lut_option)
+# if shared.mrtrix_lut_file:
+# # If necessary:
+# # Perform the index conversion
+# run.command('labelconvert ' + parc_image_path + ' '
+#             + shared.parc_lut_file + ' '
+#             + shared.mrtrix_lut_file
+#             + ' parc_init.mif')
+# # Fix the sub-cortical grey matter parcellations using FSL FIRST
+# run.command('labelsgmfix parc_init.mif '
+#             + freesurfer_T1w_input
+#             + ' '
+#             + shared.mrtrix_lut_file
+#             + ' parc.mif')
+# app.cleanup('parc_init.mif')
+# else:
+# # Non-standard sub-cortical parcellation;
+# #   labelsgmfix not applicable
+# run.command('mrconvert ' + parc_image_path + ' parc.mif '
+#             '-datatype uint32')
+# app.cleanup('freesurfer')
 
 
 ###################
@@ -486,6 +300,7 @@ elif parcellation in ['yeo7fs', 'yeo17fs']:
 
 wf.set_output(("fTT_image", wf.fTTgen_task.lzout.output.cast(ImageFormat)))
 wf.set_output(("vis_image", wf.fTTvis_task.lzout.output.cast(ImageFormat)))
+wf.set_output(("parc_path_str", wf.join_task.lzout.out))
 # wf.set_output(("parc_image", wf.SGMfix_task.lzout.output.cast(ImageFormat)))
 
 # ## Execute the workflow (FastSurfer, NIF data)
@@ -517,4 +332,5 @@ result = wf(
     FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_3af71ff49c76c541ad541bf24fd2849d/subjects_dir/FS_outputs/",
 )
 
+print("Result:", result)
 
