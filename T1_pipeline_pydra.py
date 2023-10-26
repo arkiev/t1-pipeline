@@ -31,14 +31,15 @@ wf.add(
         T1_files=wf.lzin.t1w, 
         fs_license=wf.lzin.fs_license,
         subject_id="FS_outputs",
-        threads=24,
         name="FastSurfer_task",
         py="python3.11",
         norm_img="norm.mgz",
-        aparcaseg="aparcaseg.mgz",
+        aparcaseg_img="aparcaseg.mgz",
+        fsaparc=True,
         # surf_only=True,
         # seg=wf.lzin.segmentation,
         # parallel=True,
+        threads=24,
     )    
 )
 
@@ -113,11 +114,22 @@ wf.set_output(("parc_image", wf.SGMfix_task.lzout.output.cast(ImageFormat)))
 #     plugin="serial"
 # )
 
-# Execute the workflow (FastSurfer, HCP data)
+# # Execute the workflow (FastSurfer, HCP data)
+# result = wf(
+#     t1w="/Users/arkievdsouza/Documents/100307/100307_FastSurfer/mri/orig.nii.gz",
+#     fs_license="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FS_license.txt",
+#     sub_ID="100307",
+#     default_file="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/fs_default.txt",
+#     freesurfer_LUT="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FreeSurferColorLUT.txt",
+#     # segmentation="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_0425d50a2d1bdc642ef8feb235ec3855/subjects_dir/100307/mri/aparc.DKTatlas+aseg.deep.mgz",
+#     plugin="serial",
+# )
+
+# Execute the workflow (FastSurfer, Siemans data)
 result = wf(
-    t1w="/Users/arkievdsouza/Documents/100307/100307_FastSurfer/mri/orig.nii.gz",
+    t1w="/Users/arkievdsouza/Desktop/FastSurferTesting/data/sub-01_T1w_pos.nii.gz",
     fs_license="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FS_license.txt",
-    sub_ID="100307",
+    sub_ID="sub-01",
     default_file="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/fs_default.txt",
     freesurfer_LUT="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FreeSurferColorLUT.txt",
     # segmentation="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_0425d50a2d1bdc642ef8feb235ec3855/subjects_dir/100307/mri/aparc.DKTatlas+aseg.deep.mgz",
