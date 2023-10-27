@@ -16,13 +16,10 @@ from pydra import mark
 
 # Define the path and output_path variables
 # path = '/Users/arkievdsouza/Documents/NIFdata/ds000114'
-output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir'
-default_file="/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/fs_default.txt",
-freesurfer_LUT="/Applications/freesurfer/FreeSurferColorLUT.txt",
-
+output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir/v1_tests/'
 
 # Define the input_spec for the workflow
-input_spec = {"t1w": NiftiGz, "fs_license": File, "sub_ID": str, "segmentation": MghGz} 
+input_spec = {"t1w": NiftiGz, "fs_license": File, "sub_ID": str, "default_file": File, "freesurfer_LUT": File, "segmentation": MghGz} 
 output_spec = {"fTT_image": ImageFormat,"vis_image": ImageFormat,  "parc_image": ImageFormat}
 
 # Create a workflow 
@@ -80,8 +77,8 @@ wf.add(
 wf.add(
     labelconvert(
         path_in=wf.FastSurfer_task.lzout.aparcaseg_img,
-        lut_in=freesurfer_LUT,
-        lut_out=default_file,
+        lut_in=wf.lzin.freesurfer_LUT,
+        lut_out=wf.lzin.default_file,
         path_out="nodes.mif",
         name="LabelConvert_task"
     )
@@ -92,7 +89,7 @@ wf.add(
     labelsgmfix(
         parc=wf.LabelConvert_task.lzout.path_out, 
         t1=wf.FastSurfer_task.lzout.norm_img,
-        lut=default_file,
+        lut=wf.lzin.default_file,
         output="parcellation_image_DK_unregistered.mif",
         name="SGMfix_task",
         nocleanup=True,
@@ -114,6 +111,8 @@ result = wf(
     t1w="/Users/arkievdsouza/Documents/NIFdata/ds000114/sub-01/ses-retest/anat/sub-01_ses-retest_T1w.nii.gz",
     fs_license="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FS_license.txt",
     sub_ID="sub-01_ses-retest",
+    default_file="/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/fs_default.txt",
+    freesurfer_LUT="/Applications/freesurfer/FreeSurferColorLUT.txt",
     plugin="serial"
 )
 
@@ -122,6 +121,8 @@ result = wf(
 #     t1w="/Users/arkievdsouza/Documents/100307/100307_FastSurfer/mri/orig.nii.gz",
 #     fs_license="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FS_license.txt",
 #     sub_ID="100307",
+    # default_file="/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/fs_default.txt",
+    # freesurfer_LUT="/Applications/freesurfer/FreeSurferColorLUT.txt",
 #     # segmentation="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_0425d50a2d1bdc642ef8feb235ec3855/subjects_dir/100307/mri/aparc.DKTatlas+aseg.deep.mgz",
 #     plugin="serial",
 # )
@@ -131,6 +132,13 @@ result = wf(
 #     t1w="/Users/arkievdsouza/Desktop/FastSurferTesting/data/sub-01_T1w_pos.nii.gz",
 #     fs_license="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FS_license.txt",
 #     sub_ID="sub-01",
+    # default_file="/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/fs_default.txt",
+    # freesurfer_LUT="/Applications/freesurfer/FreeSurferColorLUT.txt",
 #     # segmentation="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_0425d50a2d1bdc642ef8feb235ec3855/subjects_dir/100307/mri/aparc.DKTatlas+aseg.deep.mgz",
 #     plugin="serial",
 # )
+
+
+## RUN THIS script, check it works
+# create a copy, call copy _parc_append or something
+# add in catalogue of parcellation files

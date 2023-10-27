@@ -16,7 +16,7 @@ from fileformats.generic import Directory
 # Define some filepaths
 freesurfer_home="/Applications/freesurfer/"
 mrtrix_lut_dir="/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/"
-output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir'
+output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir/v2_tests/'
 
 # Define the input values using input_spec
 input_spec = {"FS_dir": str, "parcellation": str} 
@@ -29,7 +29,7 @@ wf = Workflow(name='my_workflow', input_spec=input_spec,cache_dir=output_path)
 ###################################################################
 
 @mark.task
-@mark.annotate({"parcellation": str, "return": {"parc_image": str, "parc_lut_file": str, "mrtrix_lut_file": str}})
+@mark.annotate({"parcellation": str, "return": {"parc_image": str, "parc_lut_file": str, "mrtrix_lut_file": str, "output_parcellation_filename": str}})
 def identify_parc(parcellation: str):
     # DESIKAN definitions
     if parcellation == 'desikan':
@@ -42,13 +42,15 @@ def identify_parc(parcellation: str):
         parc_lut_file = os.path.join(freesurfer_home,'FreeSurferColorLUT.txt')
         mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'fs_a2009s.txt')
 
-        
-    print("Parcellation type: ", parcellation)
+
+    output_parcellation_filename=('parc_' + parcellation + '.mif' )
+    print("parcellation type: ", parcellation)
     print("FS parcellation image: ", parc_image)
     print("parc_lut_file: ", parc_lut_file)
     print("mrtrix_lut_file type: ", mrtrix_lut_file)
-    
-    return parc_image, parc_lut_file, mrtrix_lut_file 
+    print("output parcellation filename: ", output_parcellation_filename)
+
+    return parc_image, parc_lut_file, mrtrix_lut_file, output_parcellation_filename
     
 # Add the task to the workflow
 wf.add(identify_parc(parcellation=wf.lzin.parcellation, name="identifyparc_task"))
@@ -90,7 +92,7 @@ wf.add(
         parc=wf.LabelConvert_task.lzout.path_out, 
         t1=wf.join_task.lzout.normimg_path,
         lut=wf.identifyparc_task.lzout.mrtrix_lut_file,
-        output="parcellation_image.mif",
+        output=wf.identifyparc_task.lzout.output_parcellation_filename,
         name="SGMfix_task",
         nocleanup=True,
         premasked=True,
@@ -108,7 +110,7 @@ wf.set_output(("parcellation_image", wf.SGMfix_task.lzout.output))
 
 result = wf(
     FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_3af71ff49c76c541ad541bf24fd2849d/subjects_dir/FS_outputs/",
-    parcellation="destrieux",
+    parcellation="desikan",
     plugin="serial",
 )
 
