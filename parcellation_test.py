@@ -1,7 +1,7 @@
 import os
 import typing as ty
 import pydra  
-from pydra import Workflow, mark  
+from pydra import Workflow, mark, ShellCommandTask
 from pydra.engine.specs import File, Directory
 from pydra.tasks.mrtrix3.v3_0 import labelconvert, labelsgmfix
 from fileformats.medimage import NiftiGz, MghGz
@@ -11,7 +11,6 @@ import shutil
 from pathlib import Path
 import shutil
 from fileformats.generic import Directory
-
 
 # Define some filepaths
 freesurfer_home="/Applications/freesurfer/"
@@ -29,28 +28,32 @@ wf = Workflow(name='my_workflow', input_spec=input_spec,cache_dir=output_path)
 ###################################################################
 
 @mark.task
-@mark.annotate({"parcellation": str, "return": {"parc_image": str, "parc_lut_file": str, "mrtrix_lut_file": str, "output_parcellation_filename": str}})
+@mark.annotate({"parcellation": str, "return": {"fs_parc_image": str, "parc_lut_file": str, "mrtrix_lut_file": str, "output_parcellation_filename": str}})
 def identify_parc(parcellation: str):
     # DESIKAN definitions
     if parcellation == 'desikan':
-        parc_image="aparc+aseg.mgz"
+        fs_parc_image="aparc+aseg.mgz"
         parc_lut_file = os.path.join(freesurfer_home,'FreeSurferColorLUT.txt')
         mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'fs_default.txt')
     # DESTRIEUX definitions
     elif parcellation == 'destrieux':
-        parc_image="aparc.a2009s+aseg.mgz"
+        fs_parc_image="aparc.a2009s+aseg.mgz"
         parc_lut_file = os.path.join(freesurfer_home,'FreeSurferColorLUT.txt')
         mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'fs_a2009s.txt')
-
-
+    #HCPMMP1 definitions
+    elif parcellation =='hcpmmp1':
+        fs_parc_image='' # NA for this parcellation scheme    
+        parc_lut_file = os.path.join(mrtrix_lut_dir,'hcpmmp1_original.txt')
+        mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'hcpmmp1_ordered.txt')
+    
     output_parcellation_filename=('parc_' + parcellation + '.mif' )
     print("parcellation type: ", parcellation)
-    print("FS parcellation image: ", parc_image)
+    print("FS parcellation image: ", fs_parc_image)
     print("parc_lut_file: ", parc_lut_file)
     print("mrtrix_lut_file type: ", mrtrix_lut_file)
     print("output parcellation filename: ", output_parcellation_filename)
 
-    return parc_image, parc_lut_file, mrtrix_lut_file, output_parcellation_filename
+    return fs_parc_image, parc_lut_file, mrtrix_lut_file, output_parcellation_filename
     
 # Add the task to the workflow
 wf.add(identify_parc(parcellation=wf.lzin.parcellation, name="identifyparc_task"))
@@ -71,9 +74,9 @@ def join_paths(fs_dir: str, parc_image: str) -> str:
 # Add the task to the workflow
 wf.add(join_paths(fs_dir=wf.lzin.FS_dir, parc_image=wf.identifyparc_task.lzout.parc_image, name="join_task"))
 
-################
-# PARCELLATION #
-################
+######################
+# PARCELLATION EDITS #
+######################
 
 # relabel segmenetation to integers 
 wf.add(

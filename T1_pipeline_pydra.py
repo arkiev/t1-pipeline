@@ -36,13 +36,10 @@ wf.add(
         norm_img="norm.mgz",
         aparcaseg_img="aparcaseg.mgz",
         fsaparc=True,
-        # surf_only=True,
-        # seg=wf.lzin.segmentation,
         parallel=True,
         threads=24,
     )    
 )
-
 
 # #################################################
 # # Five Tissue Type Generation and visualisation #
@@ -107,36 +104,36 @@ wf.set_output(("vis_image", wf.fTTvis_task.lzout.output.cast(ImageFormat)))
 wf.set_output(("parc_image", wf.SGMfix_task.lzout.output.cast(ImageFormat)))
 
 # ## Execute the workflow (FastSurfer, NIF data)
-result = wf(
-    t1w="/Users/arkievdsouza/Documents/NIFdata/ds000114/sub-01/ses-retest/anat/sub-01_ses-retest_T1w.nii.gz",
-    fs_license="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FS_license.txt",
-    sub_ID="sub-01_ses-retest",
-    default_file="/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/fs_default.txt",
-    freesurfer_LUT="/Applications/freesurfer/FreeSurferColorLUT.txt",
-    plugin="serial"
-)
+# result = wf(
+#     t1w="/Users/arkievdsouza/Documents/NIFdata/ds000114/sub-01/ses-retest/anat/sub-01_ses-retest_T1w.nii.gz",
+#     fs_license="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FS_license.txt",
+#     sub_ID="sub-01_ses-retest",
+#     default_file="/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/fs_default.txt",
+#     freesurfer_LUT="/Applications/freesurfer/FreeSurferColorLUT.txt",
+#     plugin="serial"
+# )
 
 # # Execute the workflow (FastSurfer, HCP data)
 # result = wf(
 #     t1w="/Users/arkievdsouza/Documents/100307/100307_FastSurfer/mri/orig.nii.gz",
 #     fs_license="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FS_license.txt",
 #     sub_ID="100307",
-    # default_file="/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/fs_default.txt",
-    # freesurfer_LUT="/Applications/freesurfer/FreeSurferColorLUT.txt",
+#     default_file="/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/fs_default.txt",
+#     freesurfer_LUT="/Applications/freesurfer/FreeSurferColorLUT.txt",
 #     # segmentation="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_0425d50a2d1bdc642ef8feb235ec3855/subjects_dir/100307/mri/aparc.DKTatlas+aseg.deep.mgz",
 #     plugin="serial",
 # )
 
 # Execute the workflow (FastSurfer, Siemans data)
-# result = wf(
-#     t1w="/Users/arkievdsouza/Desktop/FastSurferTesting/data/sub-01_T1w_pos.nii.gz",
-#     fs_license="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FS_license.txt",
-#     sub_ID="sub-01",
-    # default_file="/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/fs_default.txt",
-    # freesurfer_LUT="/Applications/freesurfer/FreeSurferColorLUT.txt",
-#     # segmentation="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_0425d50a2d1bdc642ef8feb235ec3855/subjects_dir/100307/mri/aparc.DKTatlas+aseg.deep.mgz",
-#     plugin="serial",
-# )
+result = wf(
+    t1w="/Users/arkievdsouza/Desktop/FastSurferTesting/data/sub-01_T1w_pos.nii.gz",
+    fs_license="/Users/arkievdsouza/Desktop/FastSurferTesting/ReferenceFiles/FS_license.txt",
+    sub_ID="sub-01",
+    default_file="/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/fs_default.txt",
+    freesurfer_LUT="/Applications/freesurfer/FreeSurferColorLUT.txt",
+    # segmentation="/Users/arkievdsouza/git/t1-pipeline/working-dir/fastsurfer_0425d50a2d1bdc642ef8feb235ec3855/subjects_dir/100307/mri/aparc.DKTatlas+aseg.deep.mgz",
+    plugin="serial",
+)
 
 
 ## RUN THIS script, check it works
