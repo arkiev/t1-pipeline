@@ -72,7 +72,7 @@ def join_paths(fs_dir: str, parc_image: str) -> str:
     print("Norm image filepath: ", normimg_path)
     return parcimg_path, normimg_path
 # Add the task to the workflow
-wf.add(join_paths(fs_dir=wf.lzin.FS_dir, parc_image=wf.identifyparc_task.lzout.parc_image, name="join_task"))
+wf.add(join_paths(fs_dir=wf.lzin.FS_dir, parc_image=wf.identifyparc_task.lzout.parc_image, name="join_task")) #FIX CASE of FS_dir!!
 
 ######################
 # PARCELLATION EDITS #
