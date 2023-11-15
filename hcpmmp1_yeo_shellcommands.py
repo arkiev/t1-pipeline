@@ -6,29 +6,41 @@ from pydra.engine.specs import SpecInfo, BaseSpec, ShellSpec, ShellOutSpec
 freesurfer_home='/Applications/freesurfer/'
 mrtrix_lut_dir='/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/' 
 output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir/hcpmmp1_test/'
-fsavg_dir= os.path.join(freesurfer_home,"subjects","fsaverage")
-source_annotation_file_lh=os.path.join(fsavg_dir,'label','lh.HCPMMP1.annot')
-source_annotation_file_rh=os.path.join(fsavg_dir,'label','rh.HCPMMP1.annot')
 os.environ["SUBJECTS_DIR"] = ''
-# print(os.environ)
 
 # Define the input values using input_spec
 input_spec = {"FS_dir": str, "parcellation": str} 
 wf = Workflow(name='hcpmmp1_parcellation', input_spec=input_spec, cache_dir=output_path) 
 
 @mark.task
-@mark.annotate({"parcellation": str, "FS_dir": str, "freesurfer_home": str,"return": {"fs_parc_image": str, "parc_lut_file": str, "mrtrix_lut_file": str, "output_parcellation_filename": str,"lh_annotation": str,"rh_annotation": str}})
-def join_hcpmmp1(parcellation: str, FS_dir: str, freesurfer_home: str):
-    if parcellation == 'hcpmmp1':
-        fs_parc_image='N/A for this parcellation scheme'     
+@mark.annotate({"parcellation": str, "FS_dir": str, "freesurfer_home": str,"return": {"fsavg_dir": str, "parc_lut_file": str, "mrtrix_lut_file": str, "output_parcellation_filename": str,"lh_annotation": str,"rh_annotation": str,"source_annotation_file_lh": str,"source_annotation_file_rh": str}})
+def join_task(parcellation: str, FS_dir: str, freesurfer_home: str):
+    # HCPMMP1 definitions
+    if parcellation == 'HCPMMP1':
+        fsavg_dir= os.path.join(freesurfer_home,"subjects","fsaverage")
         parc_lut_file = os.path.join(mrtrix_lut_dir,'hcpmmp1_original.txt')
         mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'hcpmmp1_ordered.txt')
         output_parcellation_filename ='aparc.HCPMMP1+aseg.mgz'
         lh_annotation= os.path.join(FS_dir,"label","lh.HCPMMP1.annot")
         rh_annotation= os.path.join(FS_dir,"label","rh.HCPMMP1.annot")
-        print("lh_annotation: ", lh_annotation)
-        return fs_parc_image,parc_lut_file,mrtrix_lut_file,output_parcellation_filename,lh_annotation,rh_annotation
-wf.add(join_hcpmmp1(FS_dir=wf.lzin.FS_dir, parcellation=wf.lzin.parcellation, name="join_task_hcpmmp1"))
+        source_annotation_file_lh=os.path.join(fsavg_dir,'label','lh.HCPMMP1.annot')
+        source_annotation_file_rh=os.path.join(fsavg_dir,'label','rh.HCPMMP1.annot')
+
+    # yeo7fs definitions
+    elif parcellation == 'yeo7fs':
+        fsavg_dir= os.path.join(freesurfer_home,"subjects","fsaverage5")
+        parc_lut_file = os.path.join(freesurfer_home,"Yeo2011",'Yeo2011_7networks_Split_Components_LUT.txt')
+        mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'Yeo2011_7N_split.txt')
+        output_parcellation_filename ='aparc.yeo7fs+aseg.mgz'
+        lh_annotation= os.path.join(FS_dir,"label","lh.Yeo2011_7Networks_N1000.split_components.annot")
+        rh_annotation= os.path.join(FS_dir,"label","rh.Yeo2011_7Networks_N1000.split_components.annot")     
+        source_annotation_file_lh=os.path.join(fsavg_dir,'label','lh.Yeo2011_7Networks_N1000.split_components.annot')
+        source_annotation_file_rh=os.path.join(fsavg_dir,'label','rh.Yeo2011_7Networks_N1000.split_components.annot')
+        
+        return fsavg_dir,parc_lut_file,mrtrix_lut_file,output_parcellation_filename,lh_annotation,rh_annotation,source_annotation_file_lh,source_annotation_file_rh
+    
+wf.add(join_task(FS_dir=wf.lzin.FS_dir, parcellation=wf.lzin.parcellation, name="join_task"))
+
 
 ###########################
 # mri_surf2surf spec info #
@@ -83,10 +95,10 @@ wf.add(
         input_spec=mri_s2s_input_spec, 
         output_spec=mri_s2s_output_spec, 
         cache_dir=output_path,
-        source_subject_id=fsavg_dir,
+        source_subject_id=wf.join_tas.lzout.fsavg_dir,
         target_subject_id=wf.lzin.FS_dir,
-        source_annotation_file=source_annotation_file_lh,
-        target_annotation_file=wf.join_task_hcpmmp1.lzout.lh_annotation, 
+        source_annotation_file=wf.join_tas.lzout.source_annotation_file_lh,
+        target_annotation_file=wf.join_task.lzout.lh_annotation, 
         hemisphere="lh",      
     )
 )
@@ -102,10 +114,10 @@ wf.add(
         input_spec=mri_s2s_input_spec, 
         output_spec=mri_s2s_output_spec, 
         cache_dir=output_path,
-        source_subject_id=fsavg_dir,
+        source_subject_id=wf.join_tas.lzout.fsavg_dir,
         target_subject_id=wf.lzin.FS_dir,
-        source_annotation_file=source_annotation_file_rh,
-        target_annotation_file=wf.join_task_hcpmmp1.lzout.rh_annotation, 
+        source_annotation_file=wf.join_tas.lzout.source_annotation_file_rh,
+        target_annotation_file=wf.join_task.lzout.rh_annotation, 
         hemisphere="rh",      
     )
 )
@@ -148,9 +160,9 @@ mri_a2a_output_spec=SpecInfo(
     bases=(ShellOutSpec,) 
 )
 
-# #######################
-# # mri_aparc2aseg task #
-# #######################
+# ############################
+# # mri_aparc2aseg task - lh #
+# ############################
 
 wf.add(
     ShellCommandTask(
@@ -161,7 +173,7 @@ wf.add(
         cache_dir=output_path,
         subject=wf.lzin.FS_dir,
         old_ribbon=True,
-        annotname="HCPMMP1",
+        annotname=wf.lzin.parcellation,
         volfile=wf.join_task_hcpmmp1.lzout.output_parcellation_filename,
     )
 )
@@ -176,7 +188,7 @@ wf.set_output(("annot_lh", wf.mri_s2s_task_lh.lzout.target_annotation_file))
 wf.set_output(("annot_rh", wf.mri_s2s_task_rh.lzout.target_annotation_file))
 
 result = wf(
-    FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/hcpmmp1_test/aparc2aseg_testing/100307_orig",
+    FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/hcpmmp1_test/100307_orig",
     parcellation="hcpmmp1",
     plugin="serial",
 )
