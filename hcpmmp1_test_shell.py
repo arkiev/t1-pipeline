@@ -23,7 +23,7 @@ def join_hcpmmp1(parcellation: str, FS_dir: str, freesurfer_home: str):
         fs_parc_image='N/A for this parcellation scheme'     
         parc_lut_file = os.path.join(mrtrix_lut_dir,'hcpmmp1_original.txt')
         mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'hcpmmp1_ordered.txt')
-        output_parcellation_filename ='aparc.HCPMMP1+aseg.mgz'
+        output_parcellation_filename = os.path.join(FS_dir,"mri","'aparc.HCPMMP1+aseg.mgz'")
         lh_annotation= os.path.join(FS_dir,"label","lh.HCPMMP1.annot")
         rh_annotation= os.path.join(FS_dir,"label","rh.HCPMMP1.annot")
         print("lh_annotation: ", lh_annotation)
@@ -176,7 +176,7 @@ wf.set_output(("annot_lh", wf.mri_s2s_task_lh.lzout.target_annotation_file))
 wf.set_output(("annot_rh", wf.mri_s2s_task_rh.lzout.target_annotation_file))
 
 result = wf(
-    FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/hcpmmp1_test/aparc2aseg_testing/100307_orig",
+    FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/hcpmmp1_test/100307_orig",
     parcellation="hcpmmp1",
     plugin="serial",
 )
