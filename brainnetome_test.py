@@ -1,6 +1,7 @@
 from pydra import Workflow, mark, ShellCommandTask
 import os
 from pydra.engine.specs import SpecInfo, BaseSpec, ShellSpec, ShellOutSpec
+from pydra.tasks.freesurfer.auto import MRIsCALabel, Label2Vol, CALabel
 
 # Define some filepaths
 freesurfer_home='/Applications/freesurfer/'
@@ -56,158 +57,93 @@ def join_task_brainnetome(parcellation: str, FS_dir: str, freesurfer_home: str):
         output_volume_l2v_lh=os.path.join(FS_dir,'mri','lh.BN_Atlas.mgz')
         output_volume_l2v_rh=os.path.join(FS_dir,'mri','rh.BN_Atlas.mgz')
         transform=os.path.join(FS_dir,'transforms','talairach.m3z')
-        output_volume_calabel=os.path.join(FS_dir,'mri','rh.BN_Atlas.mgz')
+        output_volume_calabel=os.path.join(FS_dir,'mri','BN_Atlas_subcortex.mgz')
 
         return output_parcellation_filename, parc_lut_file, brainnetome_gcs_path_lh, brainnetome_gcs_path_rh,brainnetome_sgm_gca_path ,lh_annotation , lh_annotation, rh_annotation, sphere_file_lh, sphere_file_rh, cortex_label_lh, cortex_label_rh,template_volume, output_volume_l2v_lh, output_volume_l2v_rh, transform,output_volume_calabel
 
 wf.add(join_task_brainnetome(FS_dir=wf.lzin.FS_dir, parcellation=wf.lzin.parcellation, freesurfer_home=freesurfer_home, name="join_task"))
 
-
 ###########################
-# mri_surf2surf spec info #
+# mriS_ca_label task - lh #
 ###########################
-
-mris_calabel_input_spec = SpecInfo(
-    name="Input",
-    fields=[
-    ( "l_option", str,
-      { "help_string": "<unknown>",
-        "argstr": "-l",
-        "mandatory": True },
-        "position " ),
-    ( "target_subject_id", str,
-      { "help_string": "target subject",
-        "argstr": "--trgsubject",
-        "mandatory": True } ),
-    ( "source_annotation_file", str,
-      { "help_string": "annotfile : map annotation",
-        "argstr": "--sval-annot",
-        "mandatory": True } ),
-    ( "target_annotation_file", str,
-      { "help_string": "path of file in which to store output values",
-        "argstr": "--tval",
-        "mandatory": True } ),
-    ( "hemisphere", str,
-      { "help_string": "hemisphere : (lh or rh) for both source and targ",
-        "argstr": "--hemi",
-        "mandatory": True } ),       
-    ],
-    bases=(ShellSpec,) 
-)
-
-mri_s2s_output_spec=SpecInfo(
-    name="Output",
-    fields=[
-    ( "target_annotation_file", str,
-      { "help_string": "path of file in which to store output values",
-        "argstr": "--tval",
-        "mandatory": True } ),
-    ],
-    bases=(ShellOutSpec,) 
-)
-
-###########################
-# mri_surf2surf task - lh #
-###########################
-
 wf.add(
-    ShellCommandTask(
-        name="mri_s2s_task_lh",
-        executable="mri_surf2surf",
-        input_spec=mri_s2s_input_spec, 
-        output_spec=mri_s2s_output_spec, 
-        cache_dir=output_path,
-        source_subject_id=wf.join_task.lzout.fsavg_dir,
-        target_subject_id=wf.lzin.FS_dir,
-        source_annotation_file=wf.join_task.lzout.source_annotation_file_lh,
-        target_annotation_file=wf.join_task.lzout.lh_annotation, 
-        hemisphere="lh",      
+    MRIsCALabel(
+        label=wf.join_task.lzout.cortex_label_lh,
+        subject_id=wf.lzin.FS_dir,
+        hemisphere='lh',
+        canonsurf=wf.join_task.lzout.sphere_file_lh,
+        classifier=wf.join_task.lzout.brainnetome_gcs_path_lh,
+        out_file=wf.join_task.lzout.lh_annotation,
+        name='MRIsCAlabel_task_lh'
     )
 )
 
 ###########################
-# mri_surf2surf task - rh #     Update this to be a loop for hemisphere  (lh and rh)
+# mriS_ca_label task - rh #
 ###########################
-
 wf.add(
-    ShellCommandTask(
-        name="mri_s2s_task_rh",
-        executable="mri_surf2surf",
-        input_spec=mri_s2s_input_spec, 
-        output_spec=mri_s2s_output_spec, 
-        cache_dir=output_path,
-        source_subject_id=wf.join_task.lzout.fsavg_dir,
-        target_subject_id=wf.lzin.FS_dir,
-        source_annotation_file=wf.join_task.lzout.source_annotation_file_rh,
-        target_annotation_file=wf.join_task.lzout.rh_annotation, 
-        hemisphere="rh",      
+    MRIsCALabel(
+        label=wf.join_task.lzout.cortex_label_rh,
+        subject_id=wf.lzin.FS_dir,
+        hemisphere='rh',
+        canonsurf=wf.join_task.lzout.sphere_file_rh,
+        classifier=wf.join_task.lzout.brainnetome_gcs_path_rh,
+        out_file=wf.join_task.lzout.rh_annotation,
+        name='MRIsCAlabel_task_rh'
     )
 )
 
-# ############################
-# # mri_aparc2aseg spec info #
-# ############################
-
-mri_a2a_input_spec = SpecInfo(
-    name="Input",
-    fields=[
-    ( "subject", str,
-      { "help_string": "Name of the subject as found in the SUBJECTS_DIR",
-        "argstr": "--s",
-        "mandatory": True } ),
-    ( "old_ribbon", bool,
-      { "help_string": "use mri/hemi.ribbon.mgz as a mask for the cortex",
-        "argstr": "--old-ribbon",
-        "mandatory": True } ),
-    ( "annotname", str,
-      { "help_string": "Use annotname surface annotation. By default, uses ?h.aparc.annot. With this option, it will load ?h.annotname.annot. The output file will be set to annotname+aseg.mgz, but this can be changed with --o. Note: running --annot aparc.a2009s is NOT the same as running --a2009s. The index numbers will be different.",
-		"argstr": "--annot",
-        "mandatory": True } ),
-    ( "volfile", str,
-      { "help_string": "Full path of file to save the output segmentation in. Default is mri/aparc+aseg.mgz",
-        "argstr": "--o",
-        "mandatory": True } ),    
-    ],
-    bases=(ShellSpec,) 
-)
-
-mri_a2a_output_spec=SpecInfo(
-    name="Output",
-    fields=[
-    ( "volfile", str,
-      { "help_string": "Full path of file to save the output segmentation in. Default is mri/aparc+aseg.mgz",
-        "argstr": "--o",
-        "mandatory": True } ),
-    ],
-    bases=(ShellOutSpec,) 
-)
-
-# ########################
-# # mri_aparc2aseg task  #
-# ########################
-
+###########################
+# mri_label2vol task - lh #
+###########################
 wf.add(
-    ShellCommandTask(
-        name="mri_a2a_task",
-        executable="mri_aparc2aseg",
-        input_spec=mri_a2a_input_spec, 
-        output_spec=mri_a2a_output_spec, 
-        cache_dir=output_path,
-        subject=wf.lzin.FS_dir,
-        old_ribbon=True,
-        annotname=wf.lzin.parcellation,
-        volfile=wf.join_task.lzout.output_parcellation_filename,
+    Label2Vol(
+        annot_file=wf.join_task.lzout.lh_annotation,
+        template_file=wf.join_task.lzout.template_volume,
+        vol_label_file=wf.join_task.lzout.output_volume_l2v_lh,
+        subject_id=wf.lzin.FS_dir,
+        hemi='lh',
+        identity=True,
+        proj="frac 0 1 .1",
+        name='Label2Vol_task_lh'
     )
 )
-  
+
+###########################
+# mri_label2vol task - rh #
+###########################
+wf.add(
+    Label2Vol(
+        annot_file=wf.join_task.lzout.rh_annotation,
+        template_file=wf.join_task.lzout.template_volume,
+        vol_label_file=wf.join_task.lzout.output_volume_l2v_rh,
+        subject_id=wf.lzin.FS_dir,
+        hemi='rh',
+        identity=True,
+        proj="frac 0 1 .1",
+        name='Label2Vol_task_rh'
+    )
+)
+
+########################
+# mri_ca_label task #
+########################
+wf.add(
+    CALabel(
+        in_file=wf.join_task.lzout.template_volume,
+        out_file=wf.join_task.lzout.output_volume_calabel,
+        transform=wf.join_task.lzout.transform,
+        template=wf.join_task.lzout.brainnetome_sgm_gca_path,
+        name='CALabel_task'
+
+    )
+)
+
+
 ########################
 # Execute the workflow #
 ########################
-# Set the workflow output as the result of the join_task
-# wf.set_output(("parcellation_image", wf.aparc2aseg_task.lzout.out_file))
-wf.set_output(("aparc_aseg", wf.mri_a2a_task.lzout.volfile))
-wf.set_output(("annot_lh", wf.mri_s2s_task_lh.lzout.target_annotation_file))
-wf.set_output(("annot_rh", wf.mri_s2s_task_rh.lzout.target_annotation_file))
+wf.set_output(("testoutput", wf.CALabel_task.lzout.out_file))
 
 result = wf(
     FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/brainnetome246fs_testing/sub-01",
