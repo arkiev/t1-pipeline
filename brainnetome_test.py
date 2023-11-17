@@ -5,12 +5,12 @@ from pydra.engine.specs import SpecInfo, BaseSpec, ShellSpec, ShellOutSpec
 # Define some filepaths
 freesurfer_home='/Applications/freesurfer/'
 mrtrix_lut_dir='/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/' 
-output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir/hcpmmp1_yeo_tests/'
+output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir/brainnetome246fs_testing/'
 os.environ["SUBJECTS_DIR"] = ''
 
 # Define the input values using input_spec
 input_spec = {"FS_dir": str, "parcellation": str} 
-wf = Workflow(name='hcpmmp1_yeo_parcellation', input_spec=input_spec, cache_dir=output_path) 
+wf = Workflow(name='brainnetome_parcellation', input_spec=input_spec, cache_dir=output_path) 
 
 @mark.task
 @mark.annotate({
@@ -18,72 +18,63 @@ wf = Workflow(name='hcpmmp1_yeo_parcellation', input_spec=input_spec, cache_dir=
     "FS_dir": str,
     "freesurfer_home": str,
     "return": {
-        "fsavg_dir": str,
-        "parc_lut_file": str,
-        "mrtrix_lut_file": str,
         "output_parcellation_filename": str,
+        "parc_lut_file": str,
+        "brainnetome_gcs_path_lh": str,
+        "brainnetome_gcs_path_rh": str,
+        "brainnetome_sgm_gca_path": str,
         "lh_annotation": str,
         "rh_annotation": str,
-        "source_annotation_file_lh": str,
-        "source_annotation_file_rh": str
+        "sphere_file_lh": str,
+        "sphere_file_rh": str,
+        "cortex_label_lh": str,
+        "cortex_label_rh": str,
+        "template_volume": str,
+        "output_volume_l2v_lh": str,
+        "output_volume_l2v_rh": str,
+        "transform": str,
+        "output_volume_calabel": str,
     }
 })
-def join_task_hcpmmp1_yeo(parcellation: str, FS_dir: str, freesurfer_home: str):
-    if parcellation == 'hcpmmp1':
-        # HCPMMP1 definitions
-        fsavg_dir=os.path.join(freesurfer_home,"subjects","fsaverage") 
-        parc_lut_file = os.path.join(mrtrix_lut_dir,'hcpmmp1_original.txt')
-        mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'hcpmmp1_ordered.txt')
-        output_parcellation_filename = os.path.join(FS_dir,"mri","aparc.HCPMMP1+aseg.mgz")
-        lh_annotation= os.path.join(FS_dir,"label","lh.HCPMMP1.annot")
-        rh_annotation= os.path.join(FS_dir,"label","rh.HCPMMP1.annot")
-        source_annotation_file_lh=os.path.join(fsavg_dir,'label','lh.HCPMMP1.annot')
-        source_annotation_file_rh=os.path.join(fsavg_dir,'label','rh.HCPMMP1.annot')
-        print("fsavg_dir: ",fsavg_dir)
-        print("freesurfer_home: ",freesurfer_home)
-        return fsavg_dir, parc_lut_file, mrtrix_lut_file, output_parcellation_filename, lh_annotation, rh_annotation, source_annotation_file_lh, source_annotation_file_rh
+def join_task_brainnetome(parcellation: str, FS_dir: str, freesurfer_home: str):
+    if parcellation == 'brainnetome246fs':
+        # brainnetome definitions
+        #fsavg_dir=#os.path.join(freesurfer_home,"subjects","fsaverage") 
+        #mrtrix_lut_file = #os.path.join(mrtrix_lut_dir,'hcpmmp1_ordered.txt')
+        output_parcellation_filename = os.path.join(FS_dir,"mri","aparc.BN_Atlas+aseg.mgz")
+        parc_lut_file = os.path.join(freesurfer_home,'brainnetome','BN_Atlas_246_LUT.txt')
+        brainnetome_gcs_path_lh=os.path.join(freesurfer_home,'average','lh.BN_Atlas.gcs')
+        brainnetome_gcs_path_rh=os.path.join(freesurfer_home,'average','rh.BN_Atlas.gcs')
+        brainnetome_sgm_gca_path=os.path.join(freesurfer_home,'average','BN_Atlas_subcortex.gca')
+        lh_annotation= os.path.join(FS_dir,"label","lh.BN_Atlas.annot")
+        rh_annotation= os.path.join(FS_dir,"label","rh.BN_Atlas.annot")
+        sphere_file_lh=os.path.join(FS_dir,'surf','lh.sphere.reg')
+        sphere_file_rh=os.path.join(FS_dir,'surf','rh.sphere.reg')
+        cortex_label_lh=os.path.join(FS_dir,'label','lh.cortex.label')
+        cortex_label_rh=os.path.join(FS_dir,'label','rh.cortex.label')
+        template_volume=os.path.join(FS_dir,'mri','brain.mgz')
+        output_volume_l2v_lh=os.path.join(FS_dir,'mri','lh.BN_Atlas.mgz')
+        output_volume_l2v_rh=os.path.join(FS_dir,'mri','rh.BN_Atlas.mgz')
+        transform=os.path.join(FS_dir,'transforms','talairach.m3z')
+        output_volume_calabel=os.path.join(FS_dir,'mri','rh.BN_Atlas.mgz')
 
-    elif parcellation == 'yeo7fs':
-        # yeo7fs definitions
-        fsavg_dir= os.path.join(freesurfer_home,"subjects","fsaverage5")
-        parc_lut_file = os.path.join(freesurfer_home,"Yeo2011",'Yeo2011_7networks_Split_Components_LUT.txt')
-        mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'Yeo2011_7N_split.txt')
-        output_parcellation_filename = os.path.join(FS_dir,"mri",'aparc.yeo7fs+aseg.mgz')
-        lh_annotation= os.path.join(FS_dir,"label","lh.yeo7fs.annot")
-        rh_annotation= os.path.join(FS_dir,"label","rh.yeo7fs.annot")    
-        source_annotation_file_lh=os.path.join(fsavg_dir,'label','lh.Yeo2011_7Networks_N1000.split_components.annot')
-        source_annotation_file_rh=os.path.join(fsavg_dir,'label','rh.Yeo2011_7Networks_N1000.split_components.annot')
-      
-        return fsavg_dir, parc_lut_file, mrtrix_lut_file, output_parcellation_filename, lh_annotation, rh_annotation, source_annotation_file_lh, source_annotation_file_rh
+        return output_parcellation_filename, parc_lut_file, brainnetome_gcs_path_lh, brainnetome_gcs_path_rh,brainnetome_sgm_gca_path ,lh_annotation , lh_annotation, rh_annotation, sphere_file_lh, sphere_file_rh, cortex_label_lh, cortex_label_rh,template_volume, output_volume_l2v_lh, output_volume_l2v_rh, transform,output_volume_calabel
 
-    elif parcellation == 'yeo17fs':
-        # yeo17fs definitions
-        fsavg_dir= os.path.join(freesurfer_home,"subjects","fsaverage5")
-        parc_lut_file = os.path.join(freesurfer_home,"Yeo2011",'Yeo2011_17networks_Split_Components_LUT.txt')
-        mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'Yeo2011_17N_split.txt')
-        output_parcellation_filename = os.path.join(FS_dir,"mri",'aparc.yeo17fs+aseg.mgz')
-        lh_annotation= os.path.join(FS_dir,"label","lh.yeo17fs.annot")
-        rh_annotation= os.path.join(FS_dir,"label","rh.yeo17fs.annot")     
-        source_annotation_file_lh=os.path.join(fsavg_dir,'label','lh.Yeo2011_17Networks_N1000.split_components.annot')
-        source_annotation_file_rh=os.path.join(fsavg_dir,'label','rh.Yeo2011_17Networks_N1000.split_components.annot')
-      
-        return fsavg_dir, parc_lut_file, mrtrix_lut_file, output_parcellation_filename, lh_annotation, rh_annotation, source_annotation_file_lh, source_annotation_file_rh
-
-    # Add an else condition if needed for handling other cases or raise an error
-wf.add(join_task_hcpmmp1_yeo(FS_dir=wf.lzin.FS_dir, parcellation=wf.lzin.parcellation, freesurfer_home=freesurfer_home, name="join_task"))
+wf.add(join_task_brainnetome(FS_dir=wf.lzin.FS_dir, parcellation=wf.lzin.parcellation, freesurfer_home=freesurfer_home, name="join_task"))
 
 
 ###########################
 # mri_surf2surf spec info #
 ###########################
 
-mri_s2s_input_spec = SpecInfo(
+mris_calabel_input_spec = SpecInfo(
     name="Input",
     fields=[
-    ( "source_subject_id", str,
-      { "help_string": "source subject",
-        "argstr": "--srcsubject",
-        "mandatory": True } ),
+    ( "l_option", str,
+      { "help_string": "<unknown>",
+        "argstr": "-l",
+        "mandatory": True },
+        "position " ),
     ( "target_subject_id", str,
       { "help_string": "target subject",
         "argstr": "--trgsubject",
@@ -219,7 +210,7 @@ wf.set_output(("annot_lh", wf.mri_s2s_task_lh.lzout.target_annotation_file))
 wf.set_output(("annot_rh", wf.mri_s2s_task_rh.lzout.target_annotation_file))
 
 result = wf(
-    FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/hcpmmp1_yeo_tests/sub-01",
-    parcellation="hcpmmp1", #yeo7fs  yeo17fs yeo7fs
+    FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/brainnetome246fs_testing/sub-01",
+    parcellation="brainnetome246fs", #yeo7fs  yeo17fs yeo7fs
     plugin="serial",
 )
