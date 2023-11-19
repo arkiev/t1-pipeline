@@ -40,8 +40,6 @@ wf = Workflow(name='brainnetome_parcellation', input_spec=input_spec, cache_dir=
 def join_task_brainnetome(parcellation: str, FS_dir: str, freesurfer_home: str):
     if parcellation == 'brainnetome246fs':
         # brainnetome definitions
-        #fsavg_dir=#os.path.join(freesurfer_home,"subjects","fsaverage") 
-        #mrtrix_lut_file = #os.path.join(mrtrix_lut_dir,'hcpmmp1_ordered.txt')
         output_parcellation_filename = os.path.join(FS_dir,"mri","aparc.BN_Atlas+aseg.mgz")
         parc_lut_file = os.path.join(freesurfer_home,'brainnetome','BN_Atlas_246_LUT.txt')
         brainnetome_gcs_path_lh=os.path.join(freesurfer_home,'average','lh.BN_Atlas.gcs')
@@ -59,7 +57,7 @@ def join_task_brainnetome(parcellation: str, FS_dir: str, freesurfer_home: str):
         transform=os.path.join(FS_dir,'transforms','talairach.m3z')
         output_volume_calabel=os.path.join(FS_dir,'mri','BN_Atlas_subcortex.mgz')
 
-        return output_parcellation_filename, parc_lut_file, brainnetome_gcs_path_lh, brainnetome_gcs_path_rh,brainnetome_sgm_gca_path ,lh_annotation , lh_annotation, rh_annotation, sphere_file_lh, sphere_file_rh, cortex_label_lh, cortex_label_rh,template_volume, output_volume_l2v_lh, output_volume_l2v_rh, transform,output_volume_calabel
+        return output_parcellation_filename, parc_lut_file, brainnetome_gcs_path_lh, brainnetome_gcs_path_rh,brainnetome_sgm_gca_path ,lh_annotation , rh_annotation, sphere_file_lh, sphere_file_rh, cortex_label_lh, cortex_label_rh,template_volume, output_volume_l2v_lh, output_volume_l2v_rh, transform,output_volume_calabel
 
 wf.add(join_task_brainnetome(FS_dir=wf.lzin.FS_dir, parcellation=wf.lzin.parcellation, freesurfer_home=freesurfer_home, name="join_task"))
 
