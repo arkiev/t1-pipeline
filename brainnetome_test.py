@@ -4,6 +4,7 @@ from pydra.engine.specs import SpecInfo, BaseSpec, ShellSpec, ShellOutSpec
 from pydra.tasks.freesurfer.auto import MRIsCALabel, Label2Vol, CALabel
 from pydra.tasks.mrtrix3.v3_0 import mrcalc
 from fileformats.generic import File
+import typing as ty
 
 
 # Define some filepaths
@@ -147,41 +148,8 @@ wf.add(
     # - Any overlap between cortex and sub-cortical = retain cortex  #
 ######################################################################
 
-# mrcalc spec info #
-custom_mrcalc_input_spec = SpecInfo(
-    name="Input",
-    fields=[
-        ("Datatype", str, {"help_string": "output image datatype", "argstr": "-datatype {Datatype}", "mandatory": True}),
-        ("Image1", str, {"help_string": "path to input image 1", "mandatory": True, "position": -4}),
-        ("Image2", str, {"help_string": "path to input image 2", "mandatory": True, "position": -3}),
-        ("Operation", str, {"help_string": "operation to execute", "argstr": "-{Operation}", "mandatory": True, "position": -2}),
-        ("OutImage", str, {"help_string": "path to output image", "mandatory": True, "position": -1}),
-    ],
-    bases=(ShellSpec,)
-)
 
-custom_mrcalc_output_spec = SpecInfo(
-    name="Output",
-    fields=[
-        ("OutImage", str, {"help_string": "path to output image", "mandatory": True, "position": -1})
-    ],
-    bases=(ShellOutSpec,)
-)
 
-# Define mrcalc task and add it to the workflow
-wf.add(
-    ShellCommandTask(
-        name="cortex_overlap_task",
-        executable="mrcalc",
-        input_spec=custom_mrcalc_input_spec,
-        output_spec=custom_mrcalc_output_spec,
-        Image1=wf.join_task.lzout.output_volume_l2v_lh,
-        Image2=wf.join_task.lzout.output_volume_l2v_rh,
-        Operation="mult",
-        Datatype="bit",
-        OutImage="cortex_overlap.mif", 
-    )
-)
 
     # run.command('mrcalc '
     #             + ' '.join([os.path.join('freesurfer',
@@ -222,13 +190,12 @@ wf.add(
 ########################
 # Execute the workflow #
 ########################
-# wf.set_output(("CALabel_task", wf.CALabel_task.lzout.out_file))
+wf.set_output(("CALabel_task", wf.CALabel_task.lzout.out_file))
 # wf.set_output(("MRIsCAlabel_task_lh", wf.MRIsCAlabel_task_lh.lzout.out_file))
 # wf.set_output(("MRIsCAlabel_task_rh", wf.MRIsCAlabel_task_rh.lzout.out_file))
-# wf.set_output(("Label2Vol_task_lh", wf.Label2Vol_task_lh.lzout.vol_label_file))
-# wf.set_output(("Label2Vol_task_rh", wf.Label2Vol_task_rh.lzout.vol_label_file))
-wf.set_output(("cortex_overlap_task", wf.cortex_overlap_task.lzout.OutImage))
-
+wf.set_output(("Label2Vol_task_lh", wf.Label2Vol_task_lh.lzout.vol_label_file))
+wf.set_output(("Label2Vol_task_rh", wf.Label2Vol_task_rh.lzout.vol_label_file))
+# wf.set_output(("cortex_overlap_task", wf.cortex_overlap_task.lzout.out_image))
 
 result = wf(
     FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/brainnetome246fs_testing/sub-01",
