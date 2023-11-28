@@ -146,43 +146,27 @@ mri_s2s_output_spec=SpecInfo(
     bases=(ShellOutSpec,) 
 )
 
-###########################
-# mri_surf2surf task - lh #
-###########################
+##################################
+# mri_surf2surf task - lh and rh #
+##################################
 
-wf.add(
-    ShellCommandTask(
-        name="mri_s2s_task_lh",
-        executable="mri_surf2surf",
-        input_spec=mri_s2s_input_spec, 
-        output_spec=mri_s2s_output_spec, 
-        cache_dir=output_path,
-        source_subject_id=wf.join_task.lzout.fsavg_dir,
-        target_subject_id=wf.lzin.FS_dir,
-        source_annotation_file=wf.join_task.lzout.source_annotation_file_lh,
-        target_annotation_file=wf.join_task.lzout.lh_annotation, 
-        hemisphere="lh",      
+hemispheres = ['lh', 'rh']
+
+for hemi in hemispheres:
+    wf.add(
+        ShellCommandTask(
+            name=f"mri_s2s_task_{hemi}",
+            executable="mri_surf2surf",
+            input_spec=mri_s2s_input_spec, 
+            output_spec=mri_s2s_output_spec, 
+            cache_dir=output_path,
+            source_subject_id=wf.join_task.lzout.fsavg_dir,
+            target_subject_id=wf.lzin.FS_dir,
+            source_annotation_file=getattr(wf.join_task.lzout, f"source_annotation_file_{hemi}"),
+            target_annotation_file=getattr(wf.join_task.lzout, f"{hemi}_annotation"),
+            hemisphere=hemi,
+        )
     )
-)
-
-###########################
-# mri_surf2surf task - rh #     Update this to be a loop for hemisphere  (lh and rh)
-###########################
-
-wf.add(
-    ShellCommandTask(
-        name="mri_s2s_task_rh",
-        executable="mri_surf2surf",
-        input_spec=mri_s2s_input_spec, 
-        output_spec=mri_s2s_output_spec, 
-        cache_dir=output_path,
-        source_subject_id=wf.join_task.lzout.fsavg_dir,
-        target_subject_id=wf.lzin.FS_dir,
-        source_annotation_file=wf.join_task.lzout.source_annotation_file_rh,
-        target_annotation_file=wf.join_task.lzout.rh_annotation, 
-        hemisphere="rh",      
-    )
-)
 
 # ############################
 # # mri_aparc2aseg spec info #
@@ -278,7 +262,7 @@ wf.add(
 wf.set_output(("parc_img", wf.SGMfix_task.lzout.output))
 
 result = wf(
-    FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/catalogue_testing_v1/100307_orig", #sub-01
-    parcellation="hcpmmp1", #  yeo17fs yeo7fs, hcpmmp1 desikan
+    FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/catalogue_testing_v1/sub-01", #  100307_orig
+    parcellation="yeo17fs", #   yeo7fs, hcpmmp1 desikan hcpmmp1
     plugin="serial",
 )

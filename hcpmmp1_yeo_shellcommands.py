@@ -220,6 +220,6 @@ wf.set_output(("annot_rh", wf.mri_s2s_task_rh.lzout.target_annotation_file))
 
 result = wf(
     FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/hcpmmp1_yeo_tests/sub-01",
-    parcellation="hcpmmp1", #yeo7fs  yeo17fs yeo7fs
+    parcellation="yeo7fs", #   hcpmmp1 yeo17fs
     plugin="serial",
 )
