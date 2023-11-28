@@ -6,13 +6,12 @@ from pydra.tasks.mrtrix3.v3_0 import mrcalc
 from fileformats.generic import File
 import typing as ty
 
-
 # Define some filepaths
 freesurfer_home='/Applications/freesurfer/'
 mrtrix_lut_dir='/Users/arkievdsouza/git/mrtrix3/share/mrtrix3/labelconvert/' 
 output_path = '/Users/arkievdsouza/git/t1-pipeline/working-dir/brainnetome246fs_testing/'
 os.environ["SUBJECTS_DIR"] = ''
-
+# os.environ["PYTHONHASHSEED"] = ''
 # Define the input values using input_spec
 input_spec = {"FS_dir": str, "parcellation": str} 
 wf = Workflow(name='brainnetome_parcellation', input_spec=input_spec, cache_dir=output_path) 
@@ -65,67 +64,44 @@ def join_task_brainnetome(parcellation: str, FS_dir: str, freesurfer_home: str):
 
 wf.add(join_task_brainnetome(FS_dir=wf.lzin.FS_dir, parcellation=wf.lzin.parcellation, freesurfer_home=freesurfer_home, name="join_task"))
 
-# ###########################
-# # mriS_ca_label task - lh #
-# ###########################
-wf.add(
-    MRIsCALabel(
-        label=wf.join_task.lzout.cortex_label_lh,
-        subject_id=wf.lzin.FS_dir,
-        hemisphere='lh',
-        canonsurf=wf.join_task.lzout.sphere_file_lh,
-        classifier=wf.join_task.lzout.brainnetome_gcs_path_lh,
-        out_file=wf.join_task.lzout.lh_annotation,
-        name='MRIsCAlabel_task_lh'
-    )
-)
 
-###########################
-# mriS_ca_label task - rh #
-###########################
-wf.add(
-    MRIsCALabel(
-        label=wf.join_task.lzout.cortex_label_rh,
-        subject_id=wf.lzin.FS_dir,
-        hemisphere='rh',
-        canonsurf=wf.join_task.lzout.sphere_file_rh,
-        classifier=wf.join_task.lzout.brainnetome_gcs_path_rh,
-        out_file=wf.join_task.lzout.rh_annotation,
-        name='MRIsCAlabel_task_rh'
-    )
-)
+# ######################
+# # mriS_ca_label task #
+# ######################
+hemispheres = ['lh', 'rh']
 
-###########################
-# mri_label2vol task - lh #
-###########################
-wf.add(
-    Label2Vol(
-        annot_file=wf.MRIsCAlabel_task_lh.lzout.out_file,
-        template_file=wf.join_task.lzout.template_volume,
-        vol_label_file=wf.join_task.lzout.output_volume_l2v_lh,
-        subject_id=wf.lzin.FS_dir,
-        hemi='lh',
-        identity=True,
-        proj='frac 0 1 .1',
-        name='Label2Vol_task_lh'
+for hemisphere in hemispheres:
+    wf.add(
+        MRIsCALabel(
+            label=getattr(wf.join_task.lzout, f'cortex_label_{hemisphere}'),
+            subject_id=wf.lzin.FS_dir,
+            hemisphere=hemisphere,
+            canonsurf=getattr(wf.join_task.lzout, f'sphere_file_{hemisphere}'),
+            classifier=getattr(wf.join_task.lzout, f'brainnetome_gcs_path_{hemisphere}'),
+            out_file=getattr(wf.join_task.lzout, f'{hemisphere}_annotation'),
+            name=f'MRIsCAlabel_task_{hemisphere}'
+        )
     )
-)
 
-###########################
-# mri_label2vol task - rh #
-###########################
-wf.add(
-    Label2Vol(
-        annot_file=wf.MRIsCAlabel_task_rh.lzout.out_file,
-        template_file=wf.join_task.lzout.template_volume,
-        vol_label_file=wf.join_task.lzout.output_volume_l2v_rh,
-        subject_id=wf.lzin.FS_dir,
-        hemi='rh',
-        identity=True,
-        proj='frac 0 1 .1',
-        name='Label2Vol_task_rh'
+######################
+# mri_label2vol task #
+######################
+hemispheres = ['lh', 'rh']
+
+for hemisphere in hemispheres:
+    wf.add(
+        Label2Vol(
+            annot_file=getattr(wf, f"MRIsCAlabel_task_{hemisphere}").lzout.out_file,
+            template_file=wf.join_task.lzout.template_volume,
+            vol_label_file=getattr(wf.join_task.lzout, f"output_volume_l2v_{hemisphere}"),
+            subject_id=wf.lzin.FS_dir,
+            hemi=hemisphere,
+            identity=True,
+            proj='frac 0 1 .1',
+            name=f'Label2Vol_task_{hemisphere}'
+        )
     )
-)
+
 
 ########################
 # mri_ca_label task #
@@ -147,9 +123,6 @@ wf.add(
     # - Any overlap between the two hemisphere ribbons = set to zero #
     # - Any overlap between cortex and sub-cortical = retain cortex  #
 ######################################################################
-
-
-
 
     # run.command('mrcalc '
     #             + ' '.join([os.path.join('freesurfer',
@@ -184,15 +157,12 @@ wf.add(
     # app.cleanup('sgm_overlap.mif')
 
 
-
-
-
 ########################
 # Execute the workflow #
 ########################
 wf.set_output(("CALabel_task", wf.CALabel_task.lzout.out_file))
-# wf.set_output(("MRIsCAlabel_task_lh", wf.MRIsCAlabel_task_lh.lzout.out_file))
-# wf.set_output(("MRIsCAlabel_task_rh", wf.MRIsCAlabel_task_rh.lzout.out_file))
+wf.set_output(("MRIsCAlabel_task_lh", wf.MRIsCAlabel_task_lh.lzout.out_file))
+wf.set_output(("MRIsCAlabel_task_rh", wf.MRIsCAlabel_task_rh.lzout.out_file))
 wf.set_output(("Label2Vol_task_lh", wf.Label2Vol_task_lh.lzout.vol_label_file))
 wf.set_output(("Label2Vol_task_rh", wf.Label2Vol_task_rh.lzout.vol_label_file))
 # wf.set_output(("cortex_overlap_task", wf.cortex_overlap_task.lzout.out_image))
@@ -202,3 +172,69 @@ result = wf(
     parcellation="brainnetome246fs", 
     plugin="serial",
 )
+
+
+# LH RH iterations
+
+# # ###########################
+# # # mriS_ca_label task - lh #
+# # ###########################
+# wf.add(
+#     MRIsCALabel(
+#         label=wf.join_task.lzout.cortex_label_lh,
+#         subject_id=wf.lzin.FS_dir,
+#         hemisphere='lh',
+#         canonsurf=wf.join_task.lzout.sphere_file_lh,
+#         classifier=wf.join_task.lzout.brainnetome_gcs_path_lh,
+#         out_file=wf.join_task.lzout.lh_annotation,
+#         name='MRIsCAlabel_task_lh'
+#     )
+# )
+
+# ###########################
+# # mriS_ca_label task - rh #
+# ###########################
+# wf.add(
+#     MRIsCALabel(
+#         label=wf.join_task.lzout.cortex_label_rh,
+#         subject_id=wf.lzin.FS_dir,
+#         hemisphere='rh',
+#         canonsurf=wf.join_task.lzout.sphere_file_rh,
+#         classifier=wf.join_task.lzout.brainnetome_gcs_path_rh,
+#         out_file=wf.join_task.lzout.rh_annotation,
+#         name='MRIsCAlabel_task_rh'
+#     )
+# )
+
+
+# ###########################
+# # mri_label2vol task - lh #
+# ###########################
+# wf.add(
+#     Label2Vol(
+#         annot_file=wf.MRIsCAlabel_task_lh.lzout.out_file,
+#         template_file=wf.join_task.lzout.template_volume,
+#         vol_label_file=wf.join_task.lzout.output_volume_l2v_lh,
+#         subject_id=wf.lzin.FS_dir,
+#         hemi='lh',
+#         identity=True,
+#         proj='frac 0 1 .1',
+#         name='Label2Vol_task_lh'
+#     )
+# )
+
+# ###########################
+# # mri_label2vol task - rh #
+# ###########################
+# wf.add(
+#     Label2Vol(
+#         annot_file=wf.MRIsCAlabel_task_rh.lzout.out_file,
+#         template_file=wf.join_task.lzout.template_volume,
+#         vol_label_file=wf.join_task.lzout.output_volume_l2v_rh,
+#         subject_id=wf.lzin.FS_dir,
+#         hemi='rh',
+#         identity=True,
+#         proj='frac 0 1 .1',
+#         name='Label2Vol_task_rh'
+#     )
+# )
