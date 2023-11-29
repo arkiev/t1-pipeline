@@ -263,6 +263,6 @@ wf.set_output(("parc_img", wf.SGMfix_task.lzout.output))
 
 result = wf(
     FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/catalogue_testing_v1/sub-01", #  100307_orig
-    parcellation="yeo17fs", #   yeo7fs, hcpmmp1 desikan hcpmmp1
+    parcellation="yeo7fs", #   , hcpmmp1 desikan hcpmmp1 yeo17fs
     plugin="serial",
 )
