@@ -38,28 +38,31 @@ def join_task_catalogue(parcellation: str, FS_dir: str, freesurfer_home: str):
     final_parc_image=('parcellation_image_' + parcellation + '.mif' )
     normimg_path=os.path.join(FS_dir, 'mri', "norm.mgz")
      
-    # if parcellation == 'desikan':
-    #     # DESIKAN definitions
-        
-    #     fsavg_dir='' 
-    #     parc_lut_file = os.path.join(freesurfer_home,'FreeSurferColorLUT.txt')
-    #     mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'fs_default.txt')
-    #     output_parcellation_filename=os.path.join(FS_dir,"mri","aparc+aseg.mgz")
-    #     lh_annotation= ''
-    #     rh_annotation= ''
-    #     source_annotation_file_lh=''
-    #     source_annotation_file_rh=''
+    if parcellation == 'desikan':
+        # DESIKAN definitions
+        fsavg_dir='' 
+        parc_lut_file = os.path.join(freesurfer_home,'FreeSurferColorLUT.txt')
+        mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'fs_default.txt')
+        output_parcellation_filename=os.path.join(FS_dir,"mri","aparc+aseg.mgz")
+        lh_annotation= ''
+        rh_annotation= ''
+        source_annotation_file_lh=''
+        source_annotation_file_rh=''
       
-    #     return fsavg_dir, parc_lut_file, mrtrix_lut_file, output_parcellation_filename, lh_annotation, rh_annotation, source_annotation_file_lh, source_annotation_file_rh, node_image,normimg_path,final_parc_image
+        return fsavg_dir, parc_lut_file, mrtrix_lut_file, output_parcellation_filename, lh_annotation, rh_annotation, source_annotation_file_lh, source_annotation_file_rh, node_image,normimg_path,final_parc_image
+        
+    elif parcellation == 'destrieux':
+        # DESTRIEUX definitions  
+        fsavg_dir='' 
+        parc_lut_file = os.path.join(freesurfer_home,'FreeSurferColorLUT.txt')
+        mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'fs_a2009s.txt')
+        output_parcellation_filename=os.path.join(FS_dir,"mri","aparc.a2009s+aseg.mgz")
+        lh_annotation= ''
+        rh_annotation= ''
+        source_annotation_file_lh=''
+        source_annotation_file_rh=''
 
-        
-    # elif parcellation == 'destrieux':
-    #     # DESTRIEUX definitions
-    #     output_parcellation_filename=os.path.join(FS_dir,"mri","aparc.a2009s+aseg.mgz")
-    #     parc_lut_file = os.path.join(freesurfer_home,'FreeSurferColorLUT.txt')
-    #     mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'fs_a2009s.txt')
-      
-    #     return fsavg_dir, parc_lut_file, mrtrix_lut_file, output_parcellation_filename, lh_annotation, rh_annotation, source_annotation_file_lh, source_annotation_file_rh, node_image,normimg_path,final_parc_image
+        return fsavg_dir, parc_lut_file, mrtrix_lut_file, output_parcellation_filename, lh_annotation, rh_annotation, source_annotation_file_lh, source_annotation_file_rh, node_image,normimg_path,final_parc_image
 
     if parcellation == 'hcpmmp1':
         # HCPMMP1 definitions
@@ -79,9 +82,9 @@ def join_task_catalogue(parcellation: str, FS_dir: str, freesurfer_home: str):
         fsavg_dir= os.path.join(freesurfer_home,"subjects","fsaverage5")
         parc_lut_file = os.path.join(freesurfer_home,"Yeo2011",'Yeo2011_7networks_Split_Components_LUT.txt')
         mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'Yeo2011_7N_split.txt')
-        output_parcellation_filename = os.path.join(FS_dir,"mri",'aparc.yeo7fs+aseg.mgz')
-        lh_annotation= os.path.join(FS_dir,"label","lh.yeo7fs.annot")
-        rh_annotation= os.path.join(FS_dir,"label","rh.yeo7fs.annot")    
+        output_parcellation_filename = os.path.join(FS_dir,"mri",'aparc.Yeo7+aseg.mgz')
+        lh_annotation= os.path.join(FS_dir,"label","lh.Yeo7.annot")
+        rh_annotation= os.path.join(FS_dir,"label","rh.Yeo7.annot")    
         source_annotation_file_lh=os.path.join(fsavg_dir,'label','lh.Yeo2011_7Networks_N1000.split_components.annot')
         source_annotation_file_rh=os.path.join(fsavg_dir,'label','rh.Yeo2011_7Networks_N1000.split_components.annot')
       
@@ -92,16 +95,14 @@ def join_task_catalogue(parcellation: str, FS_dir: str, freesurfer_home: str):
         fsavg_dir= os.path.join(freesurfer_home,"subjects","fsaverage5")
         parc_lut_file = os.path.join(freesurfer_home,"Yeo2011",'Yeo2011_17networks_Split_Components_LUT.txt')
         mrtrix_lut_file = os.path.join(mrtrix_lut_dir,'Yeo2011_17N_split.txt')
-        output_parcellation_filename = os.path.join(FS_dir,"mri",'aparc.yeo17fs+aseg.mgz')
-        lh_annotation= os.path.join(FS_dir,"label","lh.yeo17fs.annot")
-        rh_annotation= os.path.join(FS_dir,"label","rh.yeo17fs.annot")     
+        output_parcellation_filename = os.path.join(FS_dir,"mri",'aparc.Yeo17+aseg.mgz')
+        lh_annotation= os.path.join(FS_dir,"label","lh.Yeo17fs.annot")
+        rh_annotation= os.path.join(FS_dir,"label","rh.Yeo17fs.annot")     
         source_annotation_file_lh=os.path.join(fsavg_dir,'label','lh.Yeo2011_17Networks_N1000.split_components.annot')
         source_annotation_file_rh=os.path.join(fsavg_dir,'label','rh.Yeo2011_17Networks_N1000.split_components.annot')
       
         return fsavg_dir, parc_lut_file, mrtrix_lut_file, output_parcellation_filename, lh_annotation, rh_annotation, source_annotation_file_lh, source_annotation_file_rh, node_image,normimg_path,final_parc_image
 
-
-    # Add an else condition if needed for handling other cases or raise an error
 wf.add(join_task_catalogue(FS_dir=wf.lzin.FS_dir, parcellation=wf.lzin.parcellation, freesurfer_home=freesurfer_home, name="join_task"))
 
 ###########################
@@ -150,23 +151,24 @@ mri_s2s_output_spec=SpecInfo(
 # mri_surf2surf task - lh and rh #
 ##################################
 
-hemispheres = ['lh', 'rh']
-
-for hemi in hemispheres:
-    wf.add(
-        ShellCommandTask(
-            name=f"mri_s2s_task_{hemi}",
-            executable="mri_surf2surf",
-            input_spec=mri_s2s_input_spec, 
-            output_spec=mri_s2s_output_spec, 
-            cache_dir=output_path,
-            source_subject_id=wf.join_task.lzout.fsavg_dir,
-            target_subject_id=wf.lzin.FS_dir,
-            source_annotation_file=getattr(wf.join_task.lzout, f"source_annotation_file_{hemi}"),
-            target_annotation_file=getattr(wf.join_task.lzout, f"{hemi}_annotation"),
-            hemisphere=hemi,
+if wf.inputs.parcellation in ['hcpmmp1', 'yeo17fs', 'yeo7fs']:  
+    
+    hemispheres = ['lh', 'rh']
+    for hemi in hemispheres:
+        wf.add(
+            ShellCommandTask(
+                name=f"mri_s2s_task_{hemi}",
+                executable="mri_surf2surf",
+                input_spec=mri_s2s_input_spec, 
+                output_spec=mri_s2s_output_spec, 
+                cache_dir=output_path,
+                source_subject_id=wf.join_task.lzout.fsavg_dir,
+                target_subject_id=wf.lzin.FS_dir,
+                source_annotation_file=getattr(wf.join_task.lzout, f"source_annotation_file_{hemi}"),
+                target_annotation_file=getattr(wf.join_task.lzout, f"{hemi}_annotation"),
+                hemisphere=hemi,
+            )
         )
-    )
 
 # ############################
 # # mri_aparc2aseg spec info #
@@ -209,24 +211,25 @@ mri_a2a_output_spec=SpecInfo(
 # ########################
 # # mri_aparc2aseg task  #
 # ########################
-
-wf.add(
-    ShellCommandTask(
-        name="mri_a2a_task",
-        executable="mri_aparc2aseg",
-        input_spec=mri_a2a_input_spec, 
-        output_spec=mri_a2a_output_spec, 
-        cache_dir=output_path,
-        subject=wf.lzin.FS_dir,
-        old_ribbon=True,
-        annotname=wf.lzin.parcellation,
-        volfile=wf.join_task.lzout.output_parcellation_filename,
+if wf.inputs.parcellation in ['hcpmmp1', 'yeo17fs', 'yeo7fs']:  
+    
+    wf.add(
+        ShellCommandTask(
+            name="mri_a2a_task",
+            executable="mri_aparc2aseg",
+            input_spec=mri_a2a_input_spec, 
+            output_spec=mri_a2a_output_spec, 
+            cache_dir=output_path,
+            subject=wf.lzin.FS_dir,
+            old_ribbon=True,
+            annotname=wf.lzin.parcellation,
+            volfile=wf.join_task.lzout.output_parcellation_filename,
+        )
     )
-)
   
-######################
-# PARCELLATION EDITS #
-######################
+##########################################################
+# PARCELLATION EDITS - applies to all parcellation types #
+##########################################################
 
 # relabel segmenetation to integers 
 wf.add(
@@ -253,7 +256,6 @@ wf.add(
     )
 )
 
-
 ########################
 # Execute the workflow #
 ########################
@@ -263,6 +265,6 @@ wf.set_output(("parc_img", wf.SGMfix_task.lzout.output))
 
 result = wf(
     FS_dir="/Users/arkievdsouza/git/t1-pipeline/working-dir/catalogue_testing_v1/sub-01", #  100307_orig
-    parcellation="yeo7fs", #   , hcpmmp1 desikan hcpmmp1 yeo17fs
+    parcellation="destrieux", #   , hcpmmp1 desikan hcpmmp1 yeo17fs destrieux
     plugin="serial",
 )
